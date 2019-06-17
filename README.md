@@ -1,5 +1,9 @@
 # Face Recognition with Open CV and Deep Neural Network
 
+## Tutorial
+
+https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/
+
 ## Dependencies
 
 - OpenCV 4.1
@@ -26,3 +30,7 @@
 ### imutils
 
 `pip install imutils`
+
+## Usage
+
+`python3 encode.py -i ../dataset/ -e encodings.pickle`

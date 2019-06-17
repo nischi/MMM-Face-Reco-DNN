@@ -17,6 +17,12 @@ ap.add_argument("-c", "--cascade", required=True,
 	help = "path to where the face cascade resides")
 ap.add_argument("-e", "--encodings", required=True,
 	help="path to serialized db of facial encodings")
+ap.add_argument("-p", "--usePiCamera", type=int, required=True,
+	help="Is using picamera or builtin/usb cam")
+ap.add_argument("-m", "--method", required=True,
+	help="method to detect faces (dnn, haar)")
+ap.add_argument("-d", "--detection-method", type=str, default="hog",
+	help="face detection model to use: either `hog` or `cnn`")
 args = vars(ap.parse_args())
 
 # load the known faces and embeddings along with OpenCV's Haar
@@ -27,8 +33,11 @@ detector = cv2.CascadeClassifier(args["cascade"])
 
 # initialize the video stream and allow the camera sensor to warm up
 print("[INFO] starting video stream...")
-vs = VideoStream(src=0).start()
-# vs = VideoStream(usePiCamera=True).start()
+
+if args["usePiCamera"] >= 1:
+	vs = VideoStream(usePiCamera=True).start()
+else:
+	vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
 # start the FPS counter
@@ -41,20 +50,29 @@ while True:
 	frame = vs.read()
 	frame = imutils.resize(frame, width=500)
 
-	# convert the input frame from (1) BGR to grayscale (for face
-	# detection) and (2) from BGR to RGB (for face recognition)
-	gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-	rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+	if args["method"] == "dnn":
+		# load the input image and convert it from BGR (OpenCV ordering)
+		# to dlib ordering (RGB)
+		rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+		# detect the (x, y)-coordinates of the bounding boxes
+		# corresponding to each face in the input image
+		boxes = face_recognition.face_locations(rgb,
+			model=args["detection_method"])
+	elif args["method"] == "haar":
+		# convert the input frame from (1) BGR to grayscale (for face
+		# detection) and (2) from BGR to RGB (for face recognition)
+		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-	# detect faces in the grayscale frame
-	rects = detector.detectMultiScale(gray, scaleFactor=1.1,
-		minNeighbors=5, minSize=(30, 30),
-		flags=cv2.CASCADE_SCALE_IMAGE)
+		# detect faces in the grayscale frame
+		rects = detector.detectMultiScale(gray, scaleFactor=1.1,
+			minNeighbors=5, minSize=(30, 30),
+			flags=cv2.CASCADE_SCALE_IMAGE)
 
-	# OpenCV returns bounding box coordinates in (x, y, w, h) order
-	# but we need them in (top, right, bottom, left) order, so we
-	# need to do a bit of reordering
-	boxes = [(y, x + w, y + h, x) for (x, y, w, h) in rects]
+		# OpenCV returns bounding box coordinates in (x, y, w, h) order
+		# but we need them in (top, right, bottom, left) order, so we
+		# need to do a bit of reordering
+		boxes = [(y, x + w, y + h, x) for (x, y, w, h) in rects]
 
 	# compute the facial embeddings for each face bounding box
 	encodings = face_recognition.face_encodings(rgb, boxes)

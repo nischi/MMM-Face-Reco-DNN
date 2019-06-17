@@ -115,3 +115,7 @@ dmypy.json
 
 # VSCode
 .vscode
+
+# face_recognition
+encodings.pickle
+dataset/*

@@ -1,4 +1,4 @@
-# Face Recognition with Open CV and Deep Neural Network
+# Face Recognition with Open CV and Deep Neural Network (WORK IN PROGRESS)
 
 ## Tutorial
 

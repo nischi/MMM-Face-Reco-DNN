@@ -1,0 +1,28 @@
+{
+  "name": "mmm-face-reco-dnn",
+  "version": "1.0.0",
+  "description": "Face Recognition with Open CV and Deep Neural Network",
+  "main": "MMM-Face-Reco-DNN.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nischi/MMM-Face-Reco-DNN.git"
+  },
+  "keywords": [
+    "magic",
+    "mirror",
+    "face",
+    "recognition",
+    "deep",
+    "neural",
+    "network"
+  ],
+  "author": "Thierry Nischelwitzer",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nischi/MMM-Face-Reco-DNN/issues"
+  },
+  "homepage": "https://github.com/nischi/MMM-Face-Reco-DNN#readme",
+  "dependencies": {
+    "python-shell": "^1.0.7"
+  }
+}

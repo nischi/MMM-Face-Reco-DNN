@@ -119,3 +119,6 @@ dmypy.json
 # face_recognition
 encodings.pickle
 dataset/*
+
+# node_modules
+node_modules

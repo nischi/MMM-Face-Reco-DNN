@@ -48,6 +48,9 @@ else:
 	vs = VideoStream(src=0).start()
 time.sleep(2.0)
 
+# variable for prev names
+prevNames = []
+
 # start the FPS counter
 fps = FPS().start()
 
@@ -129,9 +132,28 @@ while True:
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
 
-	printjson("login", {
-		"names": names
-	})
+	logins = []
+	logouts = []
+	# Check which names are new login and which are new logout with prevNames
+	for n in names:
+		if (prevNames.__contains__(n) == False):
+			logins.append(n)
+	for n in prevNames:
+		if (names.__contains__(n) == False):
+			logouts.append(n)
+
+	if (logins.__len__() > 0):
+		printjson("login", {
+			"names": logins
+		})
+
+	if (logouts.__len__() > 0):
+		printjson("logout", {
+			"names": logouts
+		})
+
+	# set this names as new prev names for next iteration
+	prevNames = names
 
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):

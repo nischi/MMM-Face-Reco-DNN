@@ -7,15 +7,16 @@
 
 'use strict';
 const NodeHelper = require('node_helper');
-
 const PythonShell = require('python-shell');
 var pythonStarted = false
 
 module.exports = NodeHelper.create({
-
   python_start: function () {
     const self = this;
-    const pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', { mode: 'json', args: [JSON.stringify(this.config)]});
+    const pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', {
+      mode: 'json',
+      args: [ JSON.stringify(this.config) ]
+    });
 
     pyshell.on('message', function (message) {
       if (message.hasOwnProperty('status')){
@@ -37,7 +38,6 @@ module.exports = NodeHelper.create({
     });
   },
 
-  // Subclass socketNotificationReceived received.
   socketNotificationReceived: function(notification, payload) {
     if(notification === 'CONFIG') {
       this.config = payload

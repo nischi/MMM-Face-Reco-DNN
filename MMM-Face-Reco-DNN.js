@@ -18,8 +18,6 @@ Module.register("MMM-Face-Reco-DNN", {
     defaultClass: "default",
     // Set of modules which should be shown for every user
     everyoneClass: "everyone",
-    // Should we show a welcome-message
-    welcomeMessage: true,
     // xml to recognize with haarcascae
     cascade: 'tools/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
@@ -34,7 +32,8 @@ Module.register("MMM-Face-Reco-DNN", {
   },
 
 	start: function() {
-		this.config = Object.assign({}, this.defaults, this.config);
+    this.config = Object.assign({}, this.defaults, this.config);
+		this.sendSocketNotification('CONFIG', this.config);
     Log.log("Starting module: " + this.name);
 	},
 
@@ -50,5 +49,93 @@ Module.register("MMM-Face-Reco-DNN", {
 			fr: "translations/fr.json",
 			id: "translations/id.json"
 		};
+  },
+
+	login_user: function () {
+    var self = this;
+
+    MM.getModules()
+      .withClass(this.config.defaultClass)
+      .exceptWithClass(this.config.everyoneClass)
+      .enumerate(function(module) {
+			module.hide(1000, function() {
+				Log.log(module.name + ' is hidden.');
+
+        MM.getModules()
+          .withClass(self.current_user)
+          .enumerate(function(module) {
+					module.show(1000, function() {
+						Log.log(module.name + ' is shown.');
+					}, {
+            lockString: self.identifier
+          });
+				});
+			}, {
+        lockString: self.identifier
+      });
+		});
+
+		this.sendNotification("CURRENT_USER", this.current_user);
+  },
+
+	logout_user: function () {
+    var self = this;
+
+		MM.getModules().withClass(this.current_user).enumerate(function(module) {
+			module.hide(1000, function() {
+				Log.log(module.name + ' is hidden.');
+
+        MM.getModules()
+          .withClass(self.config.defaultClass)
+          .exceptWithClass(self.config.everyoneClass)
+          .enumerate(function(module) {
+					module.show(1000, function() {
+						Log.log(module.name + ' is shown.');
+					}, {
+            lockString: self.identifier
+          });
+				});
+			}, {
+        lockString: self.identifier
+      });
+		});
+
+		this.sendNotification("CURRENT_USER", "None");
 	},
+
+	socketNotificationReceived: function(notification, payload) {
+		if (payload.action == "login"){
+			if (this.current_user_id != payload.user){
+				this.logout_user()
+			}
+			if (payload.user == -1){
+				this.current_user = this.translate("stranger")
+				this.current_user_id = payload.user;
+			}
+			else{
+				this.current_user = this.config.users[payload.user];
+				this.current_user_id = payload.user;
+				this.login_user()
+			}
+		}
+		else if (payload.action == "logout"){
+			this.logout_user()
+			this.current_user = null;
+		}
+	},
+
+	notificationReceived: function(notification, payload, sender) {
+    // Event if DOM is created
+		if (notification === 'DOM_OBJECTS_CREATED') {
+      var self = this;
+      // Show all Modules with default class
+			MM.getModules().exceptWithClass(this.config.defaultClass).enumerate(function(module) {
+				module.hide(0, function() {
+					Log.log('Module is hidden.');
+        }, {
+          lockString: self.identifier
+        });
+			});
+		}
+	}
 });

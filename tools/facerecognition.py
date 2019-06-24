@@ -10,6 +10,12 @@ import imutils
 import pickle
 import time
 import cv2
+import json
+import sys
+
+def printjson(type, message):
+	print(json.dumps({type: message}))
+	sys.stdout.flush()
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -21,18 +27,18 @@ ap.add_argument("-p", "--usePiCamera", type=int, required=False, default=1,
 	help="Is using picamera or builtin/usb cam")
 ap.add_argument("-m", "--method", type=str, required=False, default="dnn",
 	help="method to detect faces (dnn, haar)")
-ap.add_argument("-d", "--detection-method", type=str, required=False, default="hog",
+ap.add_argument("-d", "--detectionMethod", type=str, required=False, default="hog",
 	help="face detection model to use: either `hog` or `cnn`")
 args = vars(ap.parse_args())
 
 # load the known faces and embeddings along with OpenCV's Haar
 # cascade for face detection
-print("[INFO] loading encodings + face detector...")
+printjson("status", "loading encodings + face detector...")
 data = pickle.loads(open(args["encodings"], "rb").read())
 detector = cv2.CascadeClassifier(args["cascade"])
 
 # initialize the video stream and allow the camera sensor to warm up
-print("[INFO] starting video stream...")
+printjson("status", "starting video stream...")
 
 if args["usePiCamera"] >= 1:
 	vs = VideoStream(usePiCamera=True).start()
@@ -57,7 +63,7 @@ while True:
 		# detect the (x, y)-coordinates of the bounding boxes
 		# corresponding to each face in the input image
 		boxes = face_recognition.face_locations(rgb,
-			model=args["detection_method"])
+			model=args["detectionMethod"])
 	elif args["method"] == "haar":
 		# convert the input frame from (1) BGR to grayscale (for face
 		# detection) and (2) from BGR to RGB (for face recognition)
@@ -130,8 +136,8 @@ while True:
 
 # stop the timer and display FPS information
 fps.stop()
-print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+printjson("status", "elasped time: {:.2f}".format(fps.elapsed()))
+printjson("status", "approx. FPS: {:.2f}".format(fps.fps()))
 
 # do a bit of cleanup
 cv2.destroyAllWindows()

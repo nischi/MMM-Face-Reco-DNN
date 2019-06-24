@@ -76,8 +76,6 @@ Module.register("MMM-Face-Reco-DNN", {
         lockString: self.identifier
       });
 		});
-
-		this.sendNotification("CURRENT_USER", this.current_user);
   },
 
 	logout_user: function (name) {
@@ -101,8 +99,6 @@ Module.register("MMM-Face-Reco-DNN", {
         lockString: self.identifier
       });
 		});
-
-		this.sendNotification("CURRENT_USER", "None");
 	},
 
 	socketNotificationReceived: function(notification, payload) {
@@ -117,6 +113,8 @@ Module.register("MMM-Face-Reco-DNN", {
 					clearTimeout(this.timouts[user]);
 				}
 			}
+
+			this.sendNotification("USERS_LOGIN", payload.users);
 		}
 		// somebody has logged out
 		else if (payload.action == "logout") {
@@ -125,6 +123,8 @@ Module.register("MMM-Face-Reco-DNN", {
 					self.logout_user(user);
 				}, this.config.logoutDelay);
 			}
+
+			this.sendNotification("USERS_LOGOUT", payload.users);
 		}
 	},
 

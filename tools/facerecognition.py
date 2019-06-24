@@ -142,6 +142,7 @@ while True:
 		if (names.__contains__(n) == False):
 			logouts.append(n)
 
+	# send inforrmation to prompt, only if something has changes
 	if (logins.__len__() > 0):
 		printjson("login", {
 			"names": logins

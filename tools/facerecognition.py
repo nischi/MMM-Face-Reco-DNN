@@ -13,15 +13,15 @@ import cv2
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-c", "--cascade", required=True,
+ap.add_argument("-c", "--cascade", type=str, required=False, default="haarcascade_frontalface_default.xml",
 	help = "path to where the face cascade resides")
-ap.add_argument("-e", "--encodings", required=True,
+ap.add_argument("-e", "--encodings", type=str, required=False, default="encodings.pickle",
 	help="path to serialized db of facial encodings")
-ap.add_argument("-p", "--usePiCamera", type=int, required=True,
+ap.add_argument("-p", "--usePiCamera", type=int, required=False, default=1,
 	help="Is using picamera or builtin/usb cam")
-ap.add_argument("-m", "--method", required=True,
+ap.add_argument("-m", "--method", type=str, required=False, default="dnn",
 	help="method to detect faces (dnn, haar)")
-ap.add_argument("-d", "--detection-method", type=str, default="hog",
+ap.add_argument("-d", "--detection-method", type=str, required=False, default="hog",
 	help="face detection model to use: either `hog` or `cnn`")
 args = vars(ap.parse_args())
 

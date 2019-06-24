@@ -29,7 +29,9 @@ Module.register("MMM-Face-Reco-DNN", {
     // hich face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate
     // deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog".
     detectionMethod: 'hog'
-  },
+	},
+
+	timouts: {},
 
 	start: function() {
     this.config = Object.assign({}, this.defaults, this.config);
@@ -51,7 +53,7 @@ Module.register("MMM-Face-Reco-DNN", {
 		};
   },
 
-	login_user: function () {
+	login_user: function (name) {
     var self = this;
 
     MM.getModules()
@@ -62,7 +64,7 @@ Module.register("MMM-Face-Reco-DNN", {
 				Log.log(module.name + ' is hidden.');
 
         MM.getModules()
-          .withClass(self.current_user)
+          .withClass(name)
           .enumerate(function(module) {
 					module.show(1000, function() {
 						Log.log(module.name + ' is shown.');
@@ -78,10 +80,10 @@ Module.register("MMM-Face-Reco-DNN", {
 		this.sendNotification("CURRENT_USER", this.current_user);
   },
 
-	logout_user: function () {
+	logout_user: function (name) {
     var self = this;
 
-		MM.getModules().withClass(this.current_user).enumerate(function(module) {
+		MM.getModules().withClass(name).enumerate(function(module) {
 			module.hide(1000, function() {
 				Log.log(module.name + ' is hidden.');
 
@@ -104,23 +106,25 @@ Module.register("MMM-Face-Reco-DNN", {
 	},
 
 	socketNotificationReceived: function(notification, payload) {
-		if (payload.action == "login"){
-			if (this.current_user_id != payload.user){
-				this.logout_user()
-			}
-			if (payload.user == -1){
-				this.current_user = this.translate("stranger")
-				this.current_user_id = payload.user;
-			}
-			else{
-				this.current_user = this.config.users[payload.user];
-				this.current_user_id = payload.user;
-				this.login_user()
+		var self = this;
+
+		// somebody has logged in
+		if (payload.action == "login") {
+			for (user in payload.users) {
+				this.login_user(user);
+
+				if (this.timouts[user] != null) {
+					clearTimeout(this.timouts[user]);
+				}
 			}
 		}
-		else if (payload.action == "logout"){
-			this.logout_user()
-			this.current_user = null;
+		// somebody has logged out
+		else if (payload.action == "logout") {
+			for (user in payload.users) {
+				this.timouts[user] = setTimeout(function() {
+					self.logout_user(user);
+				}, this.config.logoutDelay);
+			}
 		}
 	},
 

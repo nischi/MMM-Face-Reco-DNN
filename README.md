@@ -34,3 +34,16 @@ https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/
 ## Usage
 
 `python3 encode.py -i ../dataset/ -e encodings.pickle`
+
+## Config
+
+  logoutDelay: 15000,
+  checkInterval: 2000,
+  defaultClass: "default",
+  everyoneClass: "everyone",
+  welcomeMessage: true,
+  cascade: 'tools/haarcascade_frontalface_default.xml',
+  encodings: 'tools/encodings.pickle',
+  usePiCamera: 1,
+  method: 'dnn',
+  detectionMethod: 'hog'

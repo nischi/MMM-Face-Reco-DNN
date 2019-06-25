@@ -2,6 +2,8 @@
 
 This module detect and recognize your face for [MagicMirror²](https://magicmirror.builders/). This module is mainly inspired by [MMM-Facial-Recognition-OCV3](https://github.com/normyx/MMM-Facial-Recognition-OCV3) and a tutorial from [Adrian Rosebrock](https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/). It use the new DNN (Deep neural network) of OpenCV 4.1 and is much more accurate than the old Haar Cascade method. But also this are still available in this module because for a Raspberry Pi zero the new way will be to heavy.
 
+With this module you can show and hide all other modules depend on which person are recognized. For example: if you are in front of the mirror, the mirror will show you your agenda, but if a stranger are in front, it will not show the agenda.
+
 ## Screenshot
 
 Because this Module works in the background, i do not have any Screenshot.
@@ -12,6 +14,9 @@ Because this Module works in the background, i do not have any Screenshot.
 - [dlib](#dlib)
 - [face_recognition](#fr)
 - [imutils](#imutils)
+- Camera
+
+I use a [Raspberry Pi Spy Cam](https://www.digitec.ch/de/s1/product/sertronics-rpi-spycam-kamera-elektronikmodul-8194042) which i built in in my [mirror](https://forum.magicmirror.builders/topic/10567/my-old-wood-mirror?page=1).
 
 ## Install Dependencies
 

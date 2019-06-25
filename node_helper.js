@@ -9,18 +9,19 @@
 const NodeHelper = require('node_helper');
 const PythonShell = require('python-shell');
 var pythonStarted = false
+var pyshell;
 
 module.exports = NodeHelper.create({
   python_start: function () {
     const self = this;
     // Start face reco script
-    const pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', {
+    self.pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', {
       mode: 'json',
       args: [ JSON.stringify(this.config) ]
     });
 
     // check if a message of the python script is comming in
-    pyshell.on('message', function (message) {
+    self.pyshell.on('message', function (message) {
       // A status message has received and will log
       if (message.hasOwnProperty('status')){
         console.log("[" + self.name + "] " + message.status);
@@ -46,10 +47,14 @@ module.exports = NodeHelper.create({
     });
 
     // Shutdown node helper
-    pyshell.end(function (err) {
+    self.pyshell.end(function (err) {
       if (err) throw err;
       console.log("[" + self.name + "] " + 'finished running...');
     });
+  },
+
+  python_stop: function() {
+    self.pyshell.send("q");
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -61,5 +66,10 @@ module.exports = NodeHelper.create({
         this.python_start();
         };
     };
+  },
+
+  stop: function() {
+    pythonStarted = false;
+    this.python_stop();
   }
 });

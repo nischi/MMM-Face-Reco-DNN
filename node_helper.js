@@ -37,7 +37,7 @@ module.exports = NodeHelper.create({
 
       // Somebody new are in front of the camera, send it back to the Magic Mirror Module
       if (message.hasOwnProperty('login')){
-        console.log("[" + self.name + "] " + "Users " + message.login.names.join(' - ') + " logged out.");
+        console.log("[" + self.name + "] " + "Users " + message.login.names.join(' - ') + " logged in.");
         self.sendSocketNotification('user', {
           action: "login",
           users: message.login.names

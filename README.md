@@ -8,14 +8,14 @@ Because this Module works in the background, i do not have any Screenshot.
 
 ## Dependencies
 
-- OpenCV 4.1
-- dlib
-- face_recognition
-- imutils
+- [OpenCV 4.1](#opencv)
+- [dlib](#dlib)
+- [face_recognition](#fr)
+- [imutils](#imutils)
 
 ## Install Dependencies
 
-### OpenCV
+### <a name="opencv"></a>OpenCV
 
 You will find a lot of good examples to install OpenCV 4 for your computer / raspberry pi. I do not write here a new way :-). I only testet it with the OpenCV 4.1 version, so please use this one, maybe newer version will also work, so let me know that i can setup a compatibility list.
 
@@ -23,7 +23,7 @@ You will find a lot of good examples to install OpenCV 4 for your computer / ras
 - https://www.pyimagesearch.com/2018/09/26/install-opencv-4-on-your-raspberry-pi/
 - https://pysource.com/2019/03/15/how-to-install-python-3-and-opencv-4-on-windows/
 
-### dlib
+### <a name="dlib"></a>dlib
 
 You can install dlib easy over pip with the following command.
 
@@ -31,7 +31,7 @@ You can install dlib easy over pip with the following command.
 pip install dlib
 ```
 
-### face_recognition
+### <a name="fr"></a>face_recognition
 
 You can install the face_recognition library easy over pip with the following command.
 
@@ -39,7 +39,7 @@ You can install the face_recognition library easy over pip with the following co
 pip install face_recognition
 ```
 
-### imutils
+### <a name="imutils"></a>imutils
 
 You can install imutils easy over pip with the following command.
 

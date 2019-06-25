@@ -135,10 +135,9 @@ while True:
 		cv2.imshow("Frame", frame)
 
 	key = cv2.waitKey(1) & 0xFF
-	consoleInput = input()
 
 	# if the `q` key was pressed, break from the loop
-	if key == ord("q") or consoleInput == "q":
+	if key == ord("q"):
 		break
 
 	# update the FPS counter

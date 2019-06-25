@@ -143,9 +143,9 @@ To setup the module in MagicMirror², add the following script int the config.js
         // Set of modules which should be shown for every user
         everyoneClass: 'everyone',
         // XML to recognize with haarcascae
-        cascade: 'tools/haarcascade_frontalface_default.xml',
+        cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
         // Pre encoded pickle with the faces
-        encodings: 'tools/encodings.pickle',
+        encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
         // You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera)
         usePiCamera: 1,
         // Method of face detection (dnn = deep neural network, haar = haarcascade)
@@ -201,8 +201,8 @@ Config | Description
 `checkInterval` | How many time the recognition starts, with a RasPi 3+ it would be good every 2 seconds <br />**Default Value:** `2000`
 `defaultClass` | Module set used for strangers and if no user is detected <br />**Default Value:** `default`
 `everyoneClass` | Set of modules which should be shown for every user <br />**Default Value:** `everyone`
-`cascade` | XML to recognize with haarcascae <br />**Default Value:** `tools/haarcascade_frontalface_default.xml`
-`encodings` | Pre encoded pickle with the faces <br />**Default Value:** `tools/encodings.pickle`
+`cascade` | XML to recognize with haarcascae <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml`
+`encodings` | Pre encoded pickle with the faces <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/encodings.pickle`
 `usePiCamera` | You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera) <br />**Default Value:** `1`
 `method` | Method of face detection (dnn = deep neural network, haar = haarcascade) <br />**Default Value:** `dnn`
 `detectionMethod` | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog`

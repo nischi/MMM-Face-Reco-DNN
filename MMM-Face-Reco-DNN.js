@@ -19,9 +19,9 @@ Module.register("MMM-Face-Reco-DNN", {
     // Set of modules which should be shown for every user
     everyoneClass: "everyone",
     // xml to recognize with haarcascae
-    cascade: 'tools/haarcascade_frontalface_default.xml',
+    cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
-    encodings: 'tools/encodings.pickle',
+    encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
     // You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera)
     usePiCamera: 1,
     // method of face detection (dnn = deep neural network, haar = haarcascade)
@@ -35,7 +35,6 @@ Module.register("MMM-Face-Reco-DNN", {
 	users: [],
 
 	start: function() {
-    this.config = Object.assign({}, this.defaults, this.config);
 		this.sendSocketNotification('CONFIG', this.config);
     Log.log("Starting module: " + this.name);
 	},

@@ -7,8 +7,8 @@
 
 'use strict';
 const NodeHelper = require('node_helper');
-const PythonShell = require('python-shell');
-var pythonStarted = false
+const {PythonShell} = require("python-shell");
+var pythonStarted = false;
 var pyshell;
 
 module.exports = NodeHelper.create({
@@ -17,7 +17,15 @@ module.exports = NodeHelper.create({
     // Start face reco script
     self.pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', {
       mode: 'json',
-      args: [ JSON.stringify(this.config) ]
+      args: [
+        '--cascade=' + this.config.cascade,
+        '--encodings=' + this.config.encodings,
+        '--usePiCamera=' + this.config.usePiCamera,
+        '--method=' + this.config.method,
+        '--detectionMethod=' + this.config.detectionMethod,
+        '--interval=' + this.config.checkInterval,
+        '--output=' + this.config.output
+      ]
     });
 
     // check if a message of the python script is comming in

@@ -74,9 +74,124 @@ git clone https://github.com/nischi/MMM-Face-Reco-DNN.git
 
 ## Usage
 
-TODO
+I will try to do a summary of the most important points to use this Module. If you are interested what that exactly do, have a look to Adrian Rosebrocks [tutorial](https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/).
 
-`python3 encode.py -i ../dataset/ -e encodings.pickle`
+### Faces Dataset
+
+First of all you need to create your face dataset. The module is preconfigure that you set your Dataset in the folder `dataset` in the root folder of the module. But you can use also another folder if you want.
+
+Put each person in a seperate folder like that:
+
+```
+- dataset
+  - thierry
+    - img01.jpg
+    - img02.jpg
+    - img03.jpg
+  - adam
+    - img01.jpg
+    - img02.jpg
+    - img03.jpg
+  - james
+    - img01.jpg
+    - img02.jpg
+    - img03.jpg
+  - john
+    - img01.jpg
+    - img02.jpg
+    - img03.jpg
+```
+
+As i read through some articles it's enough if you have around **10** pictures each.
+
+### Face recognition embeddings
+
+After you setup your dataset we need to to the embeddings for the recognitions. I prepared a script for that. It took a while on my Macbook and will go much longer on a Raspberry Pi, so if possible, do it on a computer with more power.
+
+You will find this `encode.py` script in folder `tools` in the module. The following arguments are default.
+
+```sh
+python3 encode.py -i ../dataset/ -e encodings.pickle -d hog
+
+# or easy with default values
+
+python3 encode.py
+```
+
+Argument | Description
+--- | ---
+-i / --dataset | Path to input directory of faces + images<br />**Default Value:** `../dataset/`
+-e / --encodings | Path to serialized db of facial encodings<br />**Default Value:** `encodings.pickle`
+-d / --detection-method | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog`
+
+After that you are ready to configure the module and use it for MagicMirror.
+
+### Module Usage
+
+To setup the module in MagicMirror², add the following script int the config.js file in the config/ MagicMirror² directory.
+
+```js
+{
+    module: 'MMM-Face-Reco-DNN',
+    config: {
+        // Logout 15 seconds after user was not detecte anymore, if they will be detected between this 15 Seconds, they delay will start again
+        logoutDelay: 15000,
+        // How many time the recognition starts, with a RasPi 3+ it would be good every 2 seconds
+        checkInterval: 2000,
+        // Module set used for strangers and if no user is detected
+        defaultClass: 'default',
+        // Set of modules which should be shown for every user
+        everyoneClass: 'everyone',
+        // XML to recognize with haarcascae
+        cascade: 'tools/haarcascade_frontalface_default.xml',
+        // Pre encoded pickle with the faces
+        encodings: 'tools/encodings.pickle',
+        // You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera)
+        usePiCamera: 1,
+        // Method of face detection (dnn = deep neural network, haar = haarcascade)
+        method: 'dnn',
+        // Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available).
+        detectionMethod: 'hog'
+    }
+}
+```
+
+In order for this module to do anything useful you have to assign custom classes to your modules. The class default (if you don't change it) is shown if no user is detected or a stranger. The class everyone (if you don't change it) is shown for all users. To specify modules for a certain user, use their name as classname.
+
+```js
+{
+    module: 'example_module',
+    position: 'top_left',
+    //Set your classes here seperated by a space.
+    //Shown for all users
+    classes: 'default everyone'
+},
+{
+    module: 'example_module2',
+    position: 'top_left',
+    //Only shown for name1
+    classes: 'thierry james'
+},
+{
+    module: 'example_module',
+    position: 'top_right',
+    //Only shown for name1
+    classes: 'james'
+}
+```
+
+## Notifications
+
+The module send some notifications if a user are logged in or logged out. In addition you can request the list of logged in users to check if somebody is in front of the mirror.
+
+You can then use it for you own module like my [MMM-MotionControl](https://github.com/nischi/MMM-MotionControl)
+
+Notification | Direction | Description
+--- | --- | ---
+USERS_LOGIN | out | Sent if new users are detected in front of the mirror
+USERS_LOGOUT | out | Sent if users left front of the mirror
+LOGGED_IN_USERS | out | All logged in (Users in front of mirror) Users
+GET_LOGGED_IN_USERS | in | Request all logged in Users
 
 ## Config
 
@@ -90,7 +205,7 @@ Config | Description
 `encodings` | Pre encoded pickle with the faces <br />**Default Value:** `tools/encodings.pickle`
 `usePiCamera` | You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera) <br />**Default Value:** `1`
 `method` | Method of face detection (dnn = deep neural network, haar = haarcascade) <br />**Default Value:** `dnn`
-`detectionMethod` | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog". <br />**Default Value:** `hog`
+`detectionMethod` | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog`
 
 ## Credits
 

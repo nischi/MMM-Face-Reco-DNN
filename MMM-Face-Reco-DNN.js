@@ -32,6 +32,7 @@ Module.register("MMM-Face-Reco-DNN", {
 	},
 
 	timouts: {},
+	users: [],
 
 	start: function() {
     this.config = Object.assign({}, this.defaults, this.config);
@@ -110,6 +111,7 @@ Module.register("MMM-Face-Reco-DNN", {
 		if (payload.action == "login") {
 			for (user in payload.users) {
 				this.login_user(user);
+				this.users.push(user);
 
 				if (this.timouts[user] != null) {
 					clearTimeout(this.timouts[user]);
@@ -118,11 +120,13 @@ Module.register("MMM-Face-Reco-DNN", {
 
 			this.sendNotification("USERS_LOGIN", payload.users);
 		}
+
 		// somebody has logged out
 		else if (payload.action == "logout") {
 			for (user in payload.users) {
 				this.timouts[user] = setTimeout(function() {
 					self.logout_user(user);
+					self.users.splice(self.users.indexOf(user), 1)
 				}, this.config.logoutDelay);
 			}
 
@@ -131,9 +135,10 @@ Module.register("MMM-Face-Reco-DNN", {
 	},
 
 	notificationReceived: function(notification, payload, sender) {
+		var self = this;
+
     // Event if DOM is created
 		if (notification === 'DOM_OBJECTS_CREATED') {
-      var self = this;
       // Show all Modules with default class
 			MM.getModules().exceptWithClass(this.config.defaultClass).enumerate(function(module) {
 				module.hide(0, function() {
@@ -142,6 +147,11 @@ Module.register("MMM-Face-Reco-DNN", {
           lockString: self.identifier
         });
 			});
+		}
+
+		// load logged in users
+		if (notification === 'GET_LOGGED_IN_USERS') {
+			this.sendNotification("LOGGED_IN_USERS", self.users);
 		}
 	}
 });

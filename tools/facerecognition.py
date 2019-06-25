@@ -31,6 +31,8 @@ ap.add_argument("-d", "--detectionMethod", type=str, required=False, default="ho
 	help="face detection model to use: either `hog` or `cnn`")
 ap.add_argument("-i", "--interval", type=int, required=False, default=2000,
 	help="interval between recognitions")
+ap.add_argument("-o", "--output", type=int, required=False, default=1,
+	help="Show output")
 args = vars(ap.parse_args())
 
 # load the known faces and embeddings along with OpenCV's Haar
@@ -129,8 +131,18 @@ while True:
 			0.75, (0, 255, 0), 2)
 
 	# display the image to our screen
-	cv2.imshow("Frame", frame)
+	if (args["output"] == 1):
+		cv2.imshow("Frame", frame)
+
 	key = cv2.waitKey(1) & 0xFF
+	consoleInput = input()
+
+	# if the `q` key was pressed, break from the loop
+	if key == ord("q") or consoleInput == "q":
+		break
+
+	# update the FPS counter
+	fps.update()
 
 	logins = []
 	logouts = []
@@ -155,13 +167,6 @@ while True:
 
 	# set this names as new prev names for next iteration
 	prevNames = names
-
-	# if the `q` key was pressed, break from the loop
-	if key == ord("q"):
-		break
-
-	# update the FPS counter
-	fps.update()
 
 	time.sleep(args["interval"] / 1000)
 

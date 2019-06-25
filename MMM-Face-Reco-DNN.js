@@ -64,7 +64,7 @@ Module.register("MMM-Face-Reco-DNN", {
 				Log.log(module.name + ' is hidden.');
 
         MM.getModules()
-          .withClass(name)
+          .withClass(name.toLowerCase())
           .enumerate(function(module) {
 					module.show(1000, function() {
 						Log.log(module.name + ' is shown.');
@@ -81,7 +81,9 @@ Module.register("MMM-Face-Reco-DNN", {
 	logout_user: function (name) {
     var self = this;
 
-		MM.getModules().withClass(name).enumerate(function(module) {
+		MM.getModules()
+			.withClass(name.toLowerCase())
+			.enumerate(function(module) {
 			module.hide(1000, function() {
 				Log.log(module.name + ' is hidden.');
 

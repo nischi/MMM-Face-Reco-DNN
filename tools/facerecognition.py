@@ -12,10 +12,18 @@ import time
 import cv2
 import json
 import sys
+import signal
 
 def printjson(type, message):
 	print(json.dumps({type: message}))
 	sys.stdout.flush()
+
+def signalHandler(signal, frame):
+	global closeSafe
+	closeSafe = True
+
+signal.signal(signal.SIGINT, signalHandler)
+closeSafe = False
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -134,12 +142,6 @@ while True:
 	if (args["output"] == 1):
 		cv2.imshow("Frame", frame)
 
-	key = cv2.waitKey(1) & 0xFF
-
-	# if the `q` key was pressed, break from the loop
-	if key == ord("q"):
-		break
-
 	# update the FPS counter
 	fps.update()
 
@@ -166,6 +168,11 @@ while True:
 
 	# set this names as new prev names for next iteration
 	prevNames = names
+
+	key = cv2.waitKey(1) & 0xFF
+	# if the `q` key was pressed, break from the loop
+	if key == ord("q") or closeSafe == True:
+		break
 
 	time.sleep(args["interval"] / 1000)
 

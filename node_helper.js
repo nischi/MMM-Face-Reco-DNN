@@ -62,7 +62,7 @@ module.exports = NodeHelper.create({
   },
 
   python_stop: function() {
-    self.pyshell.send("q");
+    this.pyshell.terminate(2);
   },
 
   socketNotificationReceived: function(notification, payload) {

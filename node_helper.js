@@ -61,6 +61,8 @@ module.exports = NodeHelper.create({
     // Configuration are received
     if(notification === 'CONFIG') {
       this.config = payload
+      // Set static output to 0, because we do not need any output for MMM
+      this.config['output'] = 0;
       if(!pythonStarted) {
         pythonStarted = true;
         this.python_start();

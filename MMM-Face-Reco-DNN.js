@@ -62,7 +62,7 @@ Module.register("MMM-Face-Reco-DNN", {
       .withClass(this.config.defaultClass)
       .exceptWithClass(this.config.everyoneClass)
       .enumerate(function(module) {
-				module.hide(this.config.animationSpeed, function() {
+				module.hide(self.config.animationSpeed, function() {
 					Log.log(module.name + ' is hidden.');
 				}, {
 					lockString: self.identifier
@@ -72,7 +72,7 @@ Module.register("MMM-Face-Reco-DNN", {
 		MM.getModules()
 			.withClass(name.toLowerCase())
 			.enumerate(function(module) {
-				module.show(this.config.animationSpeed, function() {
+				module.show(self.config.animationSpeed, function() {
 					Log.log(module.name + ' is shown.');
 				}, {
 					lockString: self.identifier
@@ -86,7 +86,7 @@ Module.register("MMM-Face-Reco-DNN", {
 		MM.getModules()
 			.withClass(name.toLowerCase())
 			.enumerate(function(module) {
-				module.hide(this.config.animationSpeed, function() {
+				module.hide(self.config.animationSpeed, function() {
 					Log.log(module.name + ' is hidden.');
 
 				}, {
@@ -99,7 +99,7 @@ Module.register("MMM-Face-Reco-DNN", {
 				.withClass(self.config.defaultClass)
 				.exceptWithClass(self.config.everyoneClass)
 				.enumerate(function(module) {
-					module.show(this.config.animationSpeed, function() {
+					module.show(self.config.animationSpeed, function() {
 						Log.log(module.name + ' is shown.');
 					}, {
 						lockString: self.identifier

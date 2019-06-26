@@ -94,16 +94,18 @@ Module.register("MMM-Face-Reco-DNN", {
 				});
 			});
 
-		MM.getModules()
-			.withClass(self.config.defaultClass)
-			.exceptWithClass(self.config.everyoneClass)
-			.enumerate(function(module) {
-				module.show(this.config.animationSpeed, function() {
-					Log.log(module.name + ' is shown.');
-				}, {
-					lockString: self.identifier
+		if (this.users.length === 0) {
+			MM.getModules()
+				.withClass(self.config.defaultClass)
+				.exceptWithClass(self.config.everyoneClass)
+				.enumerate(function(module) {
+					module.show(this.config.animationSpeed, function() {
+						Log.log(module.name + ' is shown.');
+					}, {
+						lockString: self.identifier
+					});
 				});
-			});
+		}
 	},
 
 	socketNotificationReceived: function(notification, payload) {
@@ -112,8 +114,8 @@ Module.register("MMM-Face-Reco-DNN", {
 		// somebody has logged in
 		if (payload.action == "login") {
 			for (var user of payload.users) {
-				this.login_user(user);
 				this.users.push(user);
+				this.login_user(user);
 
 				if (this.timouts[user] != null) {
 					clearTimeout(this.timouts[user]);
@@ -127,8 +129,8 @@ Module.register("MMM-Face-Reco-DNN", {
 		else if (payload.action == "logout") {
 			for (var user of payload.users) {
 				this.timouts[user] = setTimeout(function() {
+					self.users.splice(self.users.indexOf(user), 1);
 					self.logout_user(user);
-					self.users.splice(self.users.indexOf(user), 1)
 				}, this.config.logoutDelay);
 			}
 
@@ -143,7 +145,7 @@ Module.register("MMM-Face-Reco-DNN", {
 		if (notification === 'DOM_OBJECTS_CREATED') {
       // Show all Modules with default class
 			MM.getModules()
-				.exceptWithClass(this.config.everyoneClass)
+				.exceptWithClass(this.config.defaultClass)
 				.enumerate(function(module) {
 					module.hide(0, function() {
 						Log.log('Module is hidden.');

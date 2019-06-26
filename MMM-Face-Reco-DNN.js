@@ -26,9 +26,11 @@ Module.register("MMM-Face-Reco-DNN", {
     usePiCamera: 1,
     // method of face detection (dnn = deep neural network, haar = haarcascade)
     method: 'dnn',
-    // hich face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate
+    // which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate
     // deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog".
-    detectionMethod: 'hog'
+    detectionMethod: 'hog',
+    // how fast in ms should the modules hide and show (face effect)
+    animationSpeed: 0
 	},
 
 	timouts: {},
@@ -60,22 +62,22 @@ Module.register("MMM-Face-Reco-DNN", {
       .withClass(this.config.defaultClass)
       .exceptWithClass(this.config.everyoneClass)
       .enumerate(function(module) {
-			module.hide(1000, function() {
-				Log.log(module.name + ' is hidden.');
-
-        MM.getModules()
-          .withClass(name.toLowerCase())
-          .enumerate(function(module) {
-					module.show(1000, function() {
-						Log.log(module.name + ' is shown.');
-					}, {
-            lockString: self.identifier
-          });
+				module.hide(this.config.animationSpeed, function() {
+					Log.log(module.name + ' is hidden.');
+				}, {
+					lockString: self.identifier
 				});
-			}, {
-        lockString: self.identifier
-      });
-		});
+			});
+
+		MM.getModules()
+			.withClass(name.toLowerCase())
+			.enumerate(function(module) {
+				module.show(this.config.animationSpeed, function() {
+					Log.log(module.name + ' is shown.');
+				}, {
+					lockString: self.identifier
+				});
+			});
   },
 
 	logout_user: function (name) {
@@ -84,23 +86,24 @@ Module.register("MMM-Face-Reco-DNN", {
 		MM.getModules()
 			.withClass(name.toLowerCase())
 			.enumerate(function(module) {
-			module.hide(1000, function() {
-				Log.log(module.name + ' is hidden.');
+				module.hide(this.config.animationSpeed, function() {
+					Log.log(module.name + ' is hidden.');
 
-        MM.getModules()
-          .withClass(self.config.defaultClass)
-          .exceptWithClass(self.config.everyoneClass)
-          .enumerate(function(module) {
-					module.show(1000, function() {
-						Log.log(module.name + ' is shown.');
-					}, {
-            lockString: self.identifier
-          });
+				}, {
+					lockString: self.identifier
 				});
-			}, {
-        lockString: self.identifier
-      });
-		});
+			});
+
+		MM.getModules()
+			.withClass(self.config.defaultClass)
+			.exceptWithClass(self.config.everyoneClass)
+			.enumerate(function(module) {
+				module.show(this.config.animationSpeed, function() {
+					Log.log(module.name + ' is shown.');
+				}, {
+					lockString: self.identifier
+				});
+			});
 	},
 
 	socketNotificationReceived: function(notification, payload) {
@@ -108,7 +111,7 @@ Module.register("MMM-Face-Reco-DNN", {
 
 		// somebody has logged in
 		if (payload.action == "login") {
-			for (user in payload.users) {
+			for (var user of payload.users) {
 				this.login_user(user);
 				this.users.push(user);
 
@@ -122,7 +125,7 @@ Module.register("MMM-Face-Reco-DNN", {
 
 		// somebody has logged out
 		else if (payload.action == "logout") {
-			for (user in payload.users) {
+			for (var user of payload.users) {
 				this.timouts[user] = setTimeout(function() {
 					self.logout_user(user);
 					self.users.splice(self.users.indexOf(user), 1)
@@ -139,13 +142,15 @@ Module.register("MMM-Face-Reco-DNN", {
     // Event if DOM is created
 		if (notification === 'DOM_OBJECTS_CREATED') {
       // Show all Modules with default class
-			MM.getModules().exceptWithClass(this.config.defaultClass).enumerate(function(module) {
-				module.hide(0, function() {
-					Log.log('Module is hidden.');
-        }, {
-          lockString: self.identifier
-        });
-			});
+			MM.getModules()
+				.exceptWithClass(this.config.everyoneClass)
+				.enumerate(function(module) {
+					module.hide(0, function() {
+						Log.log('Module is hidden.');
+					}, {
+						lockString: self.identifier
+					});
+				});
 		}
 
 		// load logged in users

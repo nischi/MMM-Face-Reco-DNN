@@ -62,6 +62,7 @@ module.exports = NodeHelper.create({
   },
 
   python_stop: function() {
+    console.log("[" + this.name + "] " + "Terminate python");
     this.pyshell.terminate(2);
   },
 

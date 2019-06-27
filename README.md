@@ -1,8 +1,12 @@
-# Face Recognition with Open CV and Deep Neural Network (Pre-Alpha)
+# Face Recognition with Open CV and Deep Neural Network
 
 This module detect and recognize your face for [MagicMirror²](https://magicmirror.builders/). This module is mainly inspired by [MMM-Facial-Recognition-OCV3](https://github.com/normyx/MMM-Facial-Recognition-OCV3) and a tutorial from [Adrian Rosebrock](https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/). It use the new DNN (Deep neural network) of OpenCV 4.1 and is much more accurate than the old Haar Cascade method. But also this are still available in this module because for a Raspberry Pi zero the new way will be to heavy.
 
 With this module you can show and hide all other modules depend on which person are recognized. For example: if you are in front of the mirror, the mirror will show you your agenda, but if a stranger are in front, it will not show the agenda.
+
+## Development Status (Beta)
+
+Module are finished as far as i can tell, but it was only testet on my development machine and not with my real mirror. I will test it in the next few days and let you know about the development status.
 
 ## Screenshot
 

@@ -48,6 +48,8 @@ You can install the face_recognition library easy over pip with the following co
 pip install face_recognition
 ```
 
+If you have some issues to install, maybe this [Tutorial](https://www.pyimagesearch.com/2017/05/01/install-dlib-raspberry-pi/) will help.
+
 ### <a name="imutils"></a>imutils
 
 You can install imutils easy over pip with the following command.

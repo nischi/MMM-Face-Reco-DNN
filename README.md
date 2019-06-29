@@ -176,13 +176,13 @@ In order for this module to do anything useful you have to assign custom classes
     module: 'example_module2',
     position: 'top_left',
     //Only shown for name1
-    classes: 'default thierry james'
+    classes: 'thierry james'
 },
 {
     module: 'example_module',
     position: 'top_right',
     //Only shown for name1
-    classes: 'default james'
+    classes: 'james'
 }
 ```
 

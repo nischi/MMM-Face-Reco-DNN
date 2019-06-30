@@ -4,9 +4,13 @@ This module detect and recognize your face for [MagicMirror²](https://magicmirr
 
 With this module you can show and hide all other modules depend on which person are recognized. For example: if you are in front of the mirror, the mirror will show you your agenda, but if a stranger are in front, it will not show the agenda.
 
-## Development Status (Beta)
+## Development Status (Final)
 
 Module are finished as far as i can tell, but it was only testet on my development machine and not with my real mirror. I will test it in the next few days and let you know about the development status.
+
+### Update
+
+Now i tested the Module also on my MagicMirror and work fine with the PiCamera.
 
 ## Screenshot
 

@@ -157,7 +157,7 @@ Module.register("MMM-Face-Reco-DNN", {
 
 		// load logged in users
 		if (notification === 'GET_LOGGED_IN_USERS') {
-			Log.log(module.name + ' get logged in users ' + this.users);
+			Log.log(this.name + ' get logged in users ' + this.users);
 			this.sendNotification("LOGGED_IN_USERS", this.users);
 		}
 	}

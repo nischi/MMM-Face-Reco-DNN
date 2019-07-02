@@ -129,7 +129,7 @@ Module.register("MMM-Face-Reco-DNN", {
 		else if (payload.action == "logout") {
 			for (var user of payload.users) {
 				this.timouts[user] = setTimeout(function() {
-					self.users.splice(self.users.indexOf(user), 1);
+					self.users = self.users.filter(function(u) { return u !== user });
 					self.logout_user(user);
 				}, this.config.logoutDelay);
 			}

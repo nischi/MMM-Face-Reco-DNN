@@ -165,7 +165,9 @@ To setup the module in MagicMirror², add the following script int the config.js
       // Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available).
       detectionMethod: 'hog',
       // How fast in ms should the modules hide and show (face effect)
-      animationSpeed: 0
+      animationSpeed: 0,
+      // Path to Python to run the face recognition (null / '' means default path)
+      pythonPath: null
     }
 }
 ```
@@ -221,6 +223,7 @@ Config | Description
 `method` | Method of face detection (dnn = deep neural network, haar = haarcascade) <br />**Default Value:** `dnn`
 `detectionMethod` | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog`
 `animationSpeed` | How fast in ms should the modules hide and show (face effect). <br />**Default Value:** `0`
+`pythonPath` | Path to Python where the Face-Recognition will run. <br />**Default Value:** `null`
 
 ## Credits
 

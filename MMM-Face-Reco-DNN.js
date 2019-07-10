@@ -30,7 +30,9 @@ Module.register("MMM-Face-Reco-DNN", {
     // deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog".
     detectionMethod: 'hog',
     // how fast in ms should the modules hide and show (face effect)
-    animationSpeed: 0
+		animationSpeed: 0,
+		// Path to Python to run the face recognition (null / '' means default path)
+		pythonPath: null
 	},
 
 	timouts: {},

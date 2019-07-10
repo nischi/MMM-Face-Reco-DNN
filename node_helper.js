@@ -14,8 +14,7 @@ var pyshell;
 module.exports = NodeHelper.create({
   python_start: function () {
     const self = this;
-    // Start face reco script
-    self.pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', {
+    const options = {
       mode: 'json',
       args: [
         '--cascade=' + this.config.cascade,
@@ -26,7 +25,14 @@ module.exports = NodeHelper.create({
         '--interval=' + this.config.checkInterval,
         '--output=' + this.config.output
       ]
-    });
+    }
+
+    if (this.config.pythonPath != null && this.config.pythonPath !== '') {
+      options.pythonPath = this.config.pythonPath;
+    }
+
+    // Start face reco script
+    self.pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', options);
 
     // check if a message of the python script is comming in
     self.pyshell.on('message', function (message) {

@@ -80,6 +80,8 @@ Get this module with the command line and load it direct via GitHub.
 ```sh
 cd ~/MagicMirror/modules/
 git clone https://github.com/nischi/MMM-Face-Reco-DNN.git
+cd MMM-Face-Reco-DNN
+npm install
 ```
 
 ## Usage

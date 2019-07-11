@@ -32,7 +32,9 @@ Module.register("MMM-Face-Reco-DNN", {
     // how fast in ms should the modules hide and show (face effect)
 		animationSpeed: 0,
 		// Path to Python to run the face recognition (null / '' means default path)
-		pythonPath: null
+		pythonPath: null,
+		// Boolean to toggle welcomeMessage
+		welcomeMessage: true
 	},
 
 	timouts: {},
@@ -53,7 +55,8 @@ Module.register("MMM-Face-Reco-DNN", {
       nl: "translations/nl.json",
 			sv: "translations/sv.json",
 			fr: "translations/fr.json",
-			id: "translations/id.json"
+			id: "translations/id.json",
+			bg: "translations/bg.json"
 		};
   },
 
@@ -80,6 +83,20 @@ Module.register("MMM-Face-Reco-DNN", {
 					lockString: self.identifier
 				});
 			});
+
+		if (this.config.welcomeMessage) {
+			var person = name;
+			// We get Unknown from Face-Reco and then it should be translated to stranger
+			if (person === 'Unknown') {
+				person = this.translate('stranger');
+			}
+
+			this.sendNotification("SHOW_ALERT", {
+				type: "notification",
+				message: this.translate("message").replace("%person", person),
+				title: this.translate("title")
+			});
+		}
   },
 
 	logout_user: function (name) {

@@ -8,6 +8,7 @@
 'use strict';
 const NodeHelper = require('node_helper');
 const {PythonShell} = require("python-shell");
+const onExit = require('signal-exit')
 var pythonStarted = false;
 var pyshell;
 
@@ -65,9 +66,17 @@ module.exports = NodeHelper.create({
       if (err) throw err;
       console.log("[" + self.name + "] " + 'finished running...');
     });
+
+    onExit(function (code, signal) {
+      self.destroy();
+    })
   },
 
   python_stop: function() {
+    this.destroy();
+  },
+
+  destroy: function() {
     console.log("[" + this.name + "] " + "Terminate python");
     this.pyshell.childProcess.kill();
   },

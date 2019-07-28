@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/nischi/MMM-Face-Reco-DNN#readme",
   "dependencies": {
-    "python-shell": "^1.0.7"
+    "python-shell": "^1.0.7",
+    "signal-exit": "^3.0.2"
   }
 }

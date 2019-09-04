@@ -133,11 +133,13 @@ Module.register("MMM-Face-Reco-DNN", {
 		// somebody has logged in
 		if (payload.action == "login") {
 			for (var user of payload.users) {
-				this.users.push(user);
-				this.login_user(user);
+				if (user != null) {
+					this.users.push(user);
+					this.login_user(user);
 
-				if (this.timouts[user] != null) {
-					clearTimeout(this.timouts[user]);
+					if (this.timouts[user] != null) {
+						clearTimeout(this.timouts[user]);
+					}
 				}
 			}
 
@@ -147,10 +149,12 @@ Module.register("MMM-Face-Reco-DNN", {
 		// somebody has logged out
 		else if (payload.action == "logout") {
 			for (var user of payload.users) {
-				this.timouts[user] = setTimeout(function() {
-					self.users = self.users.filter(function(u) { return u !== user });
-					self.logout_user(user);
-				}, this.config.logoutDelay);
+				if (user != null) {
+					this.timouts[user] = setTimeout(function() {
+						self.users = self.users.filter(function(u) { return u !== user });
+						self.logout_user(user);
+					}, this.config.logoutDelay);
+				}
 			}
 
 			this.sendNotification("USERS_LOGOUT", payload.users);

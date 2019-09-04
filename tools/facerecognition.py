@@ -149,10 +149,10 @@ while True:
 	logouts = []
 	# Check which names are new login and which are new logout with prevNames
 	for n in names:
-		if (prevNames.__contains__(n) == False):
+		if (prevNames.__contains__(n) == False and n is not None):
 			logins.append(n)
 	for n in prevNames:
-		if (names.__contains__(n) == False):
+		if (names.__contains__(n) == False and n is not None):
 			logouts.append(n)
 
 	# send inforrmation to prompt, only if something has changes

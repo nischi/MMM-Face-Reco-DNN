@@ -82,8 +82,8 @@ fps = FPS().start()
 while True:
 	# grab the frame from the threaded video stream and resize it
 	# to 500px (to speedup processing)
-	frame = vs.read()
-	frame = imutils.resize(frame, width=500)
+	originalFrame = vs.read()
+	frame = imutils.resize(originalFrame, width=500)
 
 	if args["method"] == "dnn":
 		# load the input image and convert it from BGR (OpenCV ordering)
@@ -147,7 +147,7 @@ while True:
 		# if extendDataset is active we need to save the picture
 		if args["extendDataset"] is True:
 			today = datetime.now()
-			cv2.imwrite(path + '/' + name + '_' + today.strftime("%Y%m%d_%H%M%S") + '.jpg', frame)
+			cv2.imwrite(path + '/' + name + '_' + today.strftime("%Y%m%d_%H%M%S") + '.jpg', originalFrame)
 
 		# update the list of names
 		names.append(name)

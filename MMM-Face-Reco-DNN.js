@@ -34,7 +34,10 @@ Module.register("MMM-Face-Reco-DNN", {
 		// Path to Python to run the face recognition (null / '' means default path)
 		pythonPath: null,
 		// Boolean to toggle welcomeMessage
-		welcomeMessage: true
+		welcomeMessage: true,
+		// Save some pictures from recognized people, if unknown we save it in folder "unknown"
+		// So you can extend your dataset and retrain it afterwards for better recognitions
+		extendDataset: false
 	},
 
 	timouts: {},

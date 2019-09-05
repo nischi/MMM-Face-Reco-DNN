@@ -169,7 +169,10 @@ To setup the module in MagicMirror², add the following script int the config.js
       // Path to Python to run the face recognition (null / '' means default path)
       pythonPath: null,
       // Should shown welcome message over alert module from MagicMirror
-      welcomeMessage: true
+      welcomeMessage: true,
+      // Save some pictures from recognized people, if unknown we save it in folder "unknown"
+      // So you can extend your dataset and retrain it afterwards for better recognitions
+      extendDataset: false
     }
 }
 ```
@@ -227,6 +230,7 @@ Config | Description
 `animationSpeed` | How fast in ms should the modules hide and show (face effect). <br />**Default Value:** `0`
 `pythonPath` | Path to Python where the Face-Recognition will run. <br />**Default Value:** `null`
 `welcomeMessage` | Show Welcome Message over alert module from MagicMirror. <br />**Default Value:** `true`
+`extendDataset` | Save some pictures from recognized people, if unknown we save it in folder "unknown". So you can extend your dataset and retrain it afterwards for better recognitions. <br />**Default Value:** `false`
 
 ## Credits
 

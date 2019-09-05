@@ -4,6 +4,7 @@
 # import the necessary packages
 from stream import VideoStream
 from imutils.video import FPS
+from datetime import datetime
 import face_recognition
 import argparse
 import imutils
@@ -13,6 +14,7 @@ import cv2
 import json
 import sys
 import signal
+import os
 
 def printjson(type, message):
 	print(json.dumps({type: message}))
@@ -41,6 +43,10 @@ ap.add_argument("-i", "--interval", type=int, required=False, default=2000,
 	help="interval between recognitions")
 ap.add_argument("-o", "--output", type=int, required=False, default=1,
 	help="Show output")
+ap.add_argument("-eds", "--extendDataset", type=bool, required=False, default=False,
+	help="Extend Dataset with unknown pictures")
+ap.add_argument("-ds", "--dataset", required=False, default="../dataset/",
+	help="path to input directory of faces + images")
 args = vars(ap.parse_args())
 
 # load the known faces and embeddings along with OpenCV's Haar
@@ -60,6 +66,14 @@ time.sleep(2.0)
 
 # variable for prev names
 prevNames = []
+
+# create unknown path if needed
+if args["extendDataset"] is True:
+	unknownPath = os.path.dirname(args["dataset"] + "unknown/")
+	try:
+			os.stat(unknownPath)
+	except:
+			os.mkdir(unknownPath)
 
 # start the FPS counter
 fps = FPS().start()
@@ -106,6 +120,7 @@ while True:
 		matches = face_recognition.compare_faces(data["encodings"],
 			encoding)
 		name = "Unknown"
+		path = unknownPath
 
 		# check to see if we have found a match
 		if True in matches:
@@ -125,6 +140,14 @@ while True:
 			# of votes (note: in the event of an unlikely tie Python
 			# will select first entry in the dictionary)
 			name = max(counts, key=counts.get)
+
+			# set correct path to the dataset
+			path = os.path.dirname(args["dataset"] + '/' + name + '/')
+
+		# if extendDataset is active we need to save the picture
+		if args["extendDataset"] is True:
+			today = datetime.now()
+			cv2.imwrite(path + '/' + name + '_' + today.strftime("%Y%m%d_%H%M%S") + '.jpg', frame)
 
 		# update the list of names
 		names.append(name)

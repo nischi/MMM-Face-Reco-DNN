@@ -119,8 +119,7 @@ while True:
 		# encodings
 		matches = face_recognition.compare_faces(data["encodings"],
 			encoding)
-		name = "Unknown"
-		path = unknownPath
+		name = "unknown"
 
 		# check to see if we have found a match
 		if True in matches:
@@ -140,14 +139,6 @@ while True:
 			# of votes (note: in the event of an unlikely tie Python
 			# will select first entry in the dictionary)
 			name = max(counts, key=counts.get)
-
-			# set correct path to the dataset
-			path = os.path.dirname(args["dataset"] + '/' + name + '/')
-
-		# if extendDataset is active we need to save the picture
-		if args["extendDataset"] is True:
-			today = datetime.now()
-			cv2.imwrite(path + '/' + name + '_' + today.strftime("%Y%m%d_%H%M%S") + '.jpg', originalFrame)
 
 		# update the list of names
 		names.append(name)
@@ -174,6 +165,14 @@ while True:
 	for n in names:
 		if (prevNames.__contains__(n) == False and n is not None):
 			logins.append(n)
+
+			# if extendDataset is active we need to save the picture
+			if args["extendDataset"] is True:
+				# set correct path to the dataset
+				path = os.path.dirname(args["dataset"] + '/' + n + '/')
+
+				today = datetime.now()
+				cv2.imwrite(path + '/' + n + '_' + today.strftime("%Y%m%d_%H%M%S") + '.jpg', originalFrame)
 	for n in prevNames:
 		if (names.__contains__(n) == False and n is not None):
 			logouts.append(n)

@@ -37,7 +37,9 @@ Module.register("MMM-Face-Reco-DNN", {
 		welcomeMessage: true,
 		// Save some pictures from recognized people, if unknown we save it in folder "unknown"
 		// So you can extend your dataset and retrain it afterwards for better recognitions
-		extendDataset: false
+		extendDataset: false,
+		// if extenDataset is set, you need to set the full path of the dataset
+		dataset: 'modules/MMM-Face-Reco-DNN/dataset/'
 	},
 
 	timouts: {},

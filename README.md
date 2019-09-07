@@ -172,7 +172,9 @@ To setup the module in MagicMirror², add the following script int the config.js
       welcomeMessage: true,
       // Save some pictures from recognized people, if unknown we save it in folder "unknown"
       // So you can extend your dataset and retrain it afterwards for better recognitions
-      extendDataset: false
+      extendDataset: false,
+      // if extenDataset is set, you need to set the full path of the dataset
+      dataset: 'modules/MMM-Face-Reco-DNN/dataset/'
     }
 }
 ```
@@ -231,6 +233,7 @@ Config | Description
 `pythonPath` | Path to Python where the Face-Recognition will run. <br />**Default Value:** `null`
 `welcomeMessage` | Show Welcome Message over alert module from MagicMirror. <br />**Default Value:** `true`
 `extendDataset` | Save some pictures from recognized people, if unknown we save it in folder "unknown". So you can extend your dataset and retrain it afterwards for better recognitions. <br />**Default Value:** `false`
+`dataset`| If extendDataset is set you need to set the path to the dataset as well. <br /> **Default Value:** `modules/MMM-Face-Reco-DNN/dataset/`
 
 ## Credits
 

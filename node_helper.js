@@ -15,6 +15,7 @@ var pyshell;
 module.exports = NodeHelper.create({
   python_start: function () {
     const self = this;
+    const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
       mode: 'json',
       args: [
@@ -25,7 +26,7 @@ module.exports = NodeHelper.create({
         '--detectionMethod=' + this.config.detectionMethod,
         '--interval=' + this.config.checkInterval,
         '--output=' + this.config.output,
-        '--extendDataset=' + (this.config.extendDataset ? 'True' : 'False')
+        '--extendDataset=' + extendedDataset
       ]
     }
 

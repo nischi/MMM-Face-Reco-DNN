@@ -25,7 +25,7 @@ module.exports = NodeHelper.create({
         '--detectionMethod=' + this.config.detectionMethod,
         '--interval=' + this.config.checkInterval,
         '--output=' + this.config.output,
-        '--extendDataset=' + this.config.extendDataset ? 'True' : 'False'
+        '--extendDataset=' + (this.config.extendDataset ? 'True' : 'False')
       ]
     }
 

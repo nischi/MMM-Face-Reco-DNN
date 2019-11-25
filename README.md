@@ -36,6 +36,8 @@ You will find a lot of good examples to install OpenCV 4 for your computer / ras
 - https://www.pyimagesearch.com/2018/09/26/install-opencv-4-on-your-raspberry-pi/
 - https://pysource.com/2019/03/15/how-to-install-python-3-and-opencv-4-on-windows/
 
+If you install OpenCV in a virutal environment, please do not forget to set the correct `pythonPath` in the settings.
+
 ### <a name="dlib"></a>dlib
 
 You can install dlib easy over pip with the following command.
@@ -179,7 +181,7 @@ To setup the module in MagicMirror², add the following script int the config.js
 }
 ```
 
-In order for this module to do anything useful you have to assign custom classes to your modules. The class default (if you don't change it) is shown if no user is detected or a stranger. The class everyone (if you don't change it) is shown for all users. To specify modules for a certain user, use their name as classname.
+In order for this module to do anything useful you have to assign custom classes to your modules. The class default (if you don't change it) is shown if no user is detected or a stranger. The class everyone (if you don't change it) is shown for all users. To specify modules for a certain user, use their name as classname. Do *not* set any classes to this module, because it has no output and will not work.
 
 ```js
 {

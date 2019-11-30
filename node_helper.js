@@ -18,6 +18,7 @@ module.exports = NodeHelper.create({
     const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
       mode: 'json',
+      stderrParser: (line) => JSON.stringify(line),
       args: [
         '--cascade=' + this.config.cascade,
         '--encodings=' + this.config.encodings,

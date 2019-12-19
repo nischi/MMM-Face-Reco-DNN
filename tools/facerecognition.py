@@ -2,8 +2,7 @@
 # python pi_face_recognition.py --cascade haarcascade_frontalface_default.xml --encodings encodings.pickle
 
 # import the necessary packages
-from stream import VideoStream
-from imutils.video import FPS
+from imutils.video import FPS, VideoStream
 from datetime import datetime
 import face_recognition
 import argparse

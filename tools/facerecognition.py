@@ -15,6 +15,18 @@ import sys
 import signal
 import os
 
+# To properly pass JSON.stringify()ed bool command line parameters, e.g. "--extendDataset"
+# See: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 def printjson(type, message):
 	print(json.dumps({type: message}))
 	sys.stdout.flush()
@@ -42,7 +54,7 @@ ap.add_argument("-i", "--interval", type=int, required=False, default=2000,
 	help="interval between recognitions")
 ap.add_argument("-o", "--output", type=int, required=False, default=1,
 	help="Show output")
-ap.add_argument("-eds", "--extendDataset", type=bool, required=False, default=False,
+ap.add_argument("-eds", "--extendDataset", type=str2bool, required=False, default=False,
 	help="Extend Dataset with unknown pictures")
 ap.add_argument("-ds", "--dataset", required=False, default="../dataset/",
 	help="path to input directory of faces + images")

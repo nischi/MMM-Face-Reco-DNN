@@ -1,6 +1,6 @@
 {
   "name": "mmm-face-reco-dnn",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Face Recognition with Open CV and Deep Neural Network",
   "main": "MMM-Face-Reco-DNN.js",
   "repository": {

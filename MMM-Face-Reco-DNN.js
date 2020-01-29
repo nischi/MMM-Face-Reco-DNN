@@ -92,8 +92,8 @@ Module.register("MMM-Face-Reco-DNN", {
 
 		if (this.config.welcomeMessage) {
 			var person = name;
-			// We get Unknown from Face-Reco and then it should be translated to stranger
-			if (person === 'Unknown') {
+			// We get unknown from Face-Reco and then it should be translated to stranger
+			if (person === 'unknown') {
 				person = this.translate('stranger');
 			}
 

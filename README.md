@@ -162,7 +162,7 @@ To setup the module in MagicMirror², add the following script int the config.js
       encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
       // You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera)
       usePiCamera: 1,
-      // Method of face detection (dnn = deep neural network, haar = haarcascade)
+      // Method of face recognition (dnn = deep neural network, haar = haarcascade)
       method: 'dnn',
       // Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available).
       detectionMethod: 'hog',
@@ -229,7 +229,7 @@ Config | Description
 `cascade` | XML to recognize with haarcascae <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml`
 `encodings` | Pre encoded pickle with the faces <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/encodings.pickle`
 `usePiCamera` | You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera) <br />**Default Value:** `1`
-`method` | Method of face detection (dnn = deep neural network, haar = haarcascade) <br />**Default Value:** `dnn`
+`method` | Method of face recognition (dnn = deep neural network, haar = haarcascade) <br />**Default Value:** `dnn`
 `detectionMethod` | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog`
 `animationSpeed` | How fast in ms should the modules hide and show (face effect). <br />**Default Value:** `0`
 `pythonPath` | Path to Python where the Face-Recognition will run. <br />**Default Value:** `null`

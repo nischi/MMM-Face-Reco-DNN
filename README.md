@@ -135,6 +135,17 @@ python3 encode.py
 
 After that you are ready to configure the module and use it on your MagicMirror.
 
+### Building encodings.pickle in a Container
+
+Another option for building the encodings.pickle file is to use a Docker container. This way all dependencies and libraries are isolated from the host OS, you will only need `make` and `docker`.
+
+```sh
+cd tools;
+make  # generate an encodings.pickle with hog, or alternatively
+
+make encoding=cnn  # overide the default to use cnn encoding
+```
+
 ### Module Usage
 
 To setup the module in MagicMirror², add the following section to the `config.js` file in the `MagicMirror/config` directory.

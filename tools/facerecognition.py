@@ -46,6 +46,8 @@ ap.add_argument("-e", "--encodings", type=str, required=False, default="encoding
 	help="path to serialized db of facial encodings")
 ap.add_argument("-p", "--usePiCamera", type=int, required=False, default=1,
 	help="Is using picamera or builtin/usb cam")
+ap.add_argument("-s", "--source", type=str, required=False, default=0,
+	help="Use 0 for /dev/video0 or 'http://link.to/stream'")
 ap.add_argument("-m", "--method", type=str, required=False, default="dnn",
 	help="method to detect faces (dnn, haar)")
 ap.add_argument("-d", "--detectionMethod", type=str, required=False, default="hog",
@@ -72,7 +74,7 @@ printjson("status", "starting video stream...")
 if args["usePiCamera"] >= 1:
 	vs = VideoStream(usePiCamera=True).start()
 else:
-	vs = VideoStream(src=0).start()
+	vs = VideoStream(src=args["source"]).start()
 time.sleep(2.0)
 
 # variable for prev names

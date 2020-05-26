@@ -181,6 +181,8 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // Use Raspberry Pi camera or another type
       // 1 = RasPi camera, 0 = other camera
       usePiCamera: 1,
+      // Rotate camera
+      rotateCamera: 0,
       // Method of facial recognition
       // dnn = deep neural network, haar = haarcascade
       method: 'dnn',

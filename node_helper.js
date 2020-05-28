@@ -23,6 +23,7 @@ module.exports = NodeHelper.create({
         '--cascade=' + this.config.cascade,
         '--encodings=' + this.config.encodings,
         '--usePiCamera=' + this.config.usePiCamera,
+        '--rotateCamera=' + this.config.rotateCamera,
         '--method=' + this.config.method,
         '--detectionMethod=' + this.config.detectionMethod,
         '--interval=' + this.config.checkInterval,

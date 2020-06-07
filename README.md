@@ -184,6 +184,8 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // If using another type of camera, you can choose
       // i.e. 0 = /dev/video0 or 'http://link.to/live'
       source: 0,
+      // Rotate camera
+      rotateCamera: 0,
       // Method of facial recognition
       // dnn = deep neural network, haar = haarcascade
       method: 'dnn',

@@ -27,6 +27,8 @@ Module.register('MMM-Face-Reco-DNN', {
     usePiCamera: 1,
     // if you don't use the pi camera, which stream do you want to use
     source: 0,
+    // rotate camera?
+    rotateCamera: 0,
     // method of face recognition (dnn = deep neural network, haar = haarcascade)
     method: 'dnn',
     // which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate

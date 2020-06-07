@@ -3,7 +3,7 @@ from webcam import WebcamVideoStream
 
 class VideoStream:
 	def __init__(self, src=0, usePiCamera=False, resolution=(320, 240),
-		framerate=32):
+		framerate=32, rotation=0):
 		# check to see if the picamera module should be used
 		if usePiCamera:
 			# only import the picamera packages unless we are
@@ -15,7 +15,7 @@ class VideoStream:
 			# initialize the picamera stream and allow the camera
 			# sensor to warmup
 			self.stream = PiVideoStream(resolution=resolution,
-				framerate=framerate)
+				framerate=framerate, rotation=rotation)
 
 		# otherwise, we are using OpenCV so initialize the webcam
 		# stream

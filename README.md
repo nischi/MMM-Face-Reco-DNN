@@ -18,6 +18,7 @@ This module works in the background, and so no screenshots are available.
 - [dlib](#dlib)
 - [face_recognition](#fr)
 - [imutils](#imutils)
+- [numpy](#numpy)
 - Camera
 
 I used a [Raspberry Pi Spy Cam](https://www.digitec.ch/de/s1/product/sertronics-rpi-spycam-kamera-elektronikmodul-8194042) which i built into my [mirror](https://forum.magicmirror.builders/topic/10567/my-old-wood-mirror?page=1). It also works fine with the regular Raspberry Pi camera module.
@@ -68,6 +69,14 @@ You can install imutils over pip.
 
 ```sh
 pip install imutils
+```
+
+### <a name="numpy"></a>numpy
+
+You can install numpy over pip.
+
+```sh
+pip install numpy
 ```
 
 ## Compatibility
@@ -204,7 +213,9 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // So you can extend your dataset and retrain it afterwards for better recognitions
       extendDataset: false,
       // If extendDataset is true, you need to set the full path of the dataset
-      dataset: 'modules/MMM-Face-Reco-DNN/dataset/'
+      dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
+      // How much distance between faces to consider it a match. Lower is more strict.
+      tolerance: 0.6
     }
 }
 ```

@@ -45,6 +45,8 @@ Module.register('MMM-Face-Reco-DNN', {
     extendDataset: false,
     // if extenDataset is set, you need to set the full path of the dataset
     dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
+    // How much distance between faces to consider it a match. Lower is more strict.
+    tolerance: 0.6
   },
 
   timouts: {},

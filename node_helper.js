@@ -31,6 +31,7 @@ module.exports = NodeHelper.create({
         '--output=' + this.config.output,
         '--extendDataset=' + extendedDataset,
         '--dataset=' + this.config.dataset,
+        '--tolerance=' + this.config.tolerance
       ],
     };
 

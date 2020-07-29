@@ -70,6 +70,7 @@ Module.register('MMM-Face-Reco-DNN', {
       id: 'translations/id.json',
       it: 'translations/it.json',
       bg: 'translations/bg.json',
+	  ru: 'translations/ru.json',
     };
   },
 

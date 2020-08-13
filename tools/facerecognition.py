@@ -93,6 +93,8 @@ if args["extendDataset"] is True:
 	except:
 			os.mkdir(unknownPath)
 
+tolerance = float(args["tolerance"])
+
 # start the FPS counter
 fps = FPS().start()
 
@@ -139,8 +141,9 @@ while True:
 
 		# the smallest distance is the closest to the encoding
 		minDistance = min(distances)
+
 		# save the name if the distance is below the tolerance
-		if minDistance < args["tolerance"]:
+		if minDistance < tolerance:
 			idx = np.where(distances == minDistance)[0][0]
 			name = data["names"][idx]
 		else:

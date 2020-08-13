@@ -63,7 +63,7 @@ ap.add_argument("-eds", "--extendDataset", type=str2bool, required=False, defaul
 	help="Extend Dataset with unknown pictures")
 ap.add_argument("-ds", "--dataset", required=False, default="../dataset/",
 	help="path to input directory of faces + images")
-ap.add_argument("-t", "--tolerance", required=False, default=0.6,
+ap.add_argument("-t", "--tolerance", type=float, required=False, default=0.6,
 	help="How much distance between faces to consider it a match. Lower is more strict.")
 args = vars(ap.parse_args())
 

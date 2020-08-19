@@ -1,5 +1,6 @@
 {
-  "message": "Hola %person, ¡que bueno verte de nuevo!",
+  "knownlogin": "Hola %person!",
+  "unknownlogin": "Hola %person, ¡que bueno verte de nuevo!",
   "title": "Facial-Recognition",
   "stranger": "desconocido"
 }

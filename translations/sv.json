@@ -1,5 +1,6 @@
 {
-  "message": "Hej %person, trevligt att träffas!",
+  "knownlogin": "Hej %person!",
+  "unknownlogin": "Hej %person, trevligt att träffas!",
   "title": "Ansiktsigenkänning",
   "stranger": "Besökare"
 }

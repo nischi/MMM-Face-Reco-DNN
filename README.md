@@ -228,7 +228,7 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // If extendDataset is true, you need to set the full path of the dataset
       dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
       // How much distance between faces to consider it a match. Lower is more strict.
-      tolerance: 0.6
+      tolerance: 0.6,
       // allow multiple concurrent user logins, 0=no, 1=yes
       multiUser: 0,
     }

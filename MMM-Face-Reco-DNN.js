@@ -233,26 +233,6 @@ Module.register('MMM-Face-Reco-DNN', {
       });
   },
   // ----------------------------------------------------------------------------------------------------
-  hide_modules_new: function(hideClasses,exceptClasses) {
-    // hide modules with "hideClasses" except for those with "exceptClasses"
-    var self = this;
-    this.config.debug && Log.log('Hiding all old classes:' + hideClasses + ', except new classes:' + exceptClasses);
-    var modules=MM.getModules();
-    modules = hideClasses && modules.withClass(hideClasses);
-    modules = exceptClasses && modules.exceptWithClass(exceptClasses);
-    modules.enumerate(function(module) {
-       module.hide(
-         self.config.animationSpeed,
-         function() {
-           Log.log(module.name + ' is hidden.');
-         },
-         {
-           lockString: self.identifier,
-         }
-       );
-     });
-  },
-  // ----------------------------------------------------------------------------------------------------
   hide_modules: function(hideClasses,exceptClasses) {
     // hide modules with "hideClasses" except for those with "exceptClasses"
     var self = this;

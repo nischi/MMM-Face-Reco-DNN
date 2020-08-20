@@ -297,7 +297,7 @@ Module.register('MMM-Face-Reco-DNN', {
     if (payload.action === 'login') {
       for (user of payload.users) {
         if (user != null) {
-         
+          
           // if there are currently no users logged in OR we allow multiple users
           if (this.users.length === 0 || this.config.multiUser) {
             // check if the user is already logged in
@@ -313,12 +313,14 @@ Module.register('MMM-Face-Reco-DNN', {
             this.config.debug && Log.log('Detected a login event for ' + user + ' but multiple concurrent logins is disabled and ' + this.users + ' is already logged in.');
           }
 
-          // clear the any timeouts the user might have so that they stay logged in
+          // clear any timeouts the user might have so that they stay logged in
           if (this.timouts[user] != null) {
             clearTimeout(this.timouts[user]);
           }
         }
       }
+	  
+	  // We still need to broadcast MM notification for backward compatability.
       this.sendNotification('USERS_LOGIN', payload.users);
     } else if (payload.action === 'logout') {
       for (user of payload.users) {

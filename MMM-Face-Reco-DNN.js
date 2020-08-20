@@ -164,14 +164,21 @@ Module.register('MMM-Face-Reco-DNN', {
     if (payload.action === 'login') {
       for (user of payload.users) {
         if (user != null) {
-          this.users.push(user);
-          this.login_user(user);
-
-          if (this.timouts[user] != null) {
-            clearTimeout(this.timouts[user]);
-          }
-        }
+			// Only send a new notification if it's an new user.
+			if ( !this.users.includes(user) ){
+				this.users.push(user);
+				this.login_user(user);
+			}
+			else {
+				Log.log("User " + user + " already logged in. Don't push notificaiton");
+			}
+            if (this.timouts[user] != null) {
+				clearTimeout(this.timouts[user]);
+		  }
+		}
       }
+	  
+	  // We still need to broadcast MM notification for backward compatability.
       this.sendNotification('USERS_LOGIN', payload.users);
     } else if (payload.action === 'logout') {
       for (user of payload.users) {
@@ -180,7 +187,11 @@ Module.register('MMM-Face-Reco-DNN', {
             self.users = self.users.filter(function(u) {
               return u !== user;
             });
-            self.logout_user(user);
+			
+			 // Broadcast notificaiton that we are about to hide modules.
+			 // Ideally this would be USERS_LOGOUT to be consistent with hide/show timer, but to prevent regression using a new type.
+			 self.sendNotification('USERS_LOGOUT_MODULES', user);
+             self.logout_user(user);
           }, this.config.logoutDelay);
         }
       }

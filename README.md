@@ -45,6 +45,11 @@ sudo apt-get -f install
 sudo dpkg -i opencv_4.1.2-1_armhf.deb
 ```
 
+### <a name="pip"></a>pip
+
+If you have both python v2 and python v3 installed then you may need to be specific in the use of either pip or pip3. If you are targetting python v3 then you will need to substitute pip3 instead of pip in the example commmands below.
+If you have only a single version of python installed then you may use pip.
+
 ### <a name="dlib"></a>dlib
 
 You can install dlib easily using pip with the following command.
@@ -179,10 +184,18 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // How often the recognition starts in milliseconds
       // With a Raspberry Pi 3+ it works well every 2 seconds
       checkInterval: 2000,
-      // Module set used for strangers or if no user is detected
+      // Module set used for when there is no face detected ie no one is in front of the camera
+      noFaceClass: 'noface',
+      // Module set used for when there is an unknown/unrecognised face detected 
+      unknownClass: 'unknown',
+      // Module set used for when there is a known/recognised face detected 
+      knownClass: 'known',
+      // Module set used for strangers and if no user is detected
       defaultClass: 'default',
-      // Set of modules which should be shown for every recognised user
+      // Set of modules which should be shown for any user ie when there is any face detected
       everyoneClass: 'everyone',
+      // Set of modules that are always shown - show if there is a face or no face detected
+      alwaysClass: 'always',
       // XML to recognize with haarcascade
       cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
       // Pre-encoded pickle with the faces
@@ -215,40 +228,13 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // If extendDataset is true, you need to set the full path of the dataset
       dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
       // How much distance between faces to consider it a match. Lower is more strict.
-      tolerance: 0.6
+      tolerance: 0.6,
+      // allow multiple concurrent user logins, 0=no, 1=yes
+      multiUser: 0,
     }
 }
 ```
 
-In order for this module to do anything useful you have to assign classes to your modules.
-
-- The class `default` (if you don't rename it) is shown if no user or a stranger is detected
-- The class `everyone` (again if you don't change it) is shown for all users
-- To specify modules for a certain user, use their name as the class name
-
-Do *not* set any classes on this module, it has no output and will not work.
-
-```js
-{
-    module: 'example_module',
-    position: 'top_left',
-    // Set your classes here seperated by a space
-    // Shown for all users
-    classes: 'default everyone'
-},
-{
-    module: 'example_module_2',
-    position: 'top_left',
-    // Only shown for Thierry and James
-    classes: 'thierry james'
-},
-{
-    module: 'example_module_3',
-    position: 'top_right',
-    // Only shown for James
-    classes: 'james'
-}
-```
 
 ## Notifications
 
@@ -267,7 +253,11 @@ The module sends notifications if a user is logged in or logged out. In addition
 |---|---|
 | `logoutDelay` | Log out this long after user was not detected any more. If they are detected within this period, the delay will start again. <br />**Default Value:** `15000` |
 | `checkInterval` | How often the recognition starts in milliseconds. With a Raspberry Pi 3+ it works well every 2 seconds. <br />**Default Value:** `2000` |
+| `noFaceClass`  | Module set used for when there is no face detected ie no one is in front of the camera. <br />**Default Value:** `noface` |
+| `unknownClass`  | Module set used for when there is an unknown/unrecognised face detected. <br />**Default Value:** `unknown` |
+| `knownClass`  |  Module set used for when there is a known/recognised face detected <br />**Default Value:** `known`|
 | `defaultClass` | Module set used for strangers or if no user is detected. <br />**Default Value:** `default` |
+| `alwaysClass`  |  Set of modules that are always shown - show if there is a face or no face detected. <br />**Default Value:** `always` |
 | `everyoneClass` | Set of modules which should be shown for every recognised user. <br />**Default Value:** `everyone` |
 | `cascade` | XML to recognize with haarcascade. <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml`. |
 | `encodings` | Pre-encoded pickle with the faces. <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/encodings.pickle` |
@@ -279,8 +269,127 @@ The module sends notifications if a user is logged in or logged out. In addition
 | `welcomeMessage` | Should a welcome message be shown using the MagicMirror alerts module? <br />**Default Value:** `true` |
 | `extendDataset` | Capture new pictures of recognized people, if unknown we save it in folder "unknown". So you can extend your dataset and retrain it afterwards for better recognitions. <br />**Default Value:** `false` |
 | `dataset` | If `extendDataset` is true, you need to set the full path of the dataset as well. <br /> **Default Value:** `modules/MMM-Face-Reco-DNN/dataset/` |
+| `multiUser` | Allow multiple concurrent user logins, 0=no, 1=yes <br /> **Default Value:** `0` |
+
+## Facial Recognition States
+
+There are 3 states that of facial recogntion that this module runs in. The states are not directly configurable but rather you use the classes to define which modules are activated in the various states. 
+
+| State | Description |
+|---|---|
+| noface | This is the state when facial recognition has found no faces |
+| unknown | This is the state when facial recognition has found a face that it does NOT recognise |
+| known  | This is the state when facial recognition has found a face that it does recognise |
+
+## Classes
+
+In order for this module to do anything useful you have to assign classes to your modules. Do *not* set any classes on this module itself, it has no output and will not work.
+
+There are a series of classes that drive the showing/hiding of modules based on the state of facial recognition. The following table gives a view of which classes drive which states.
+
+When a state changes, the classes from the old state are hidden and the classes from the new state are shown. Anytime that a specific class appears in both states, nothing happens to the modules tagged with that specific class.
+
+For example:
+- starting from no faces detected, when an unknown face is detected, any modules tagged with the `noface` class will disappear and any modules tagged with the `unknown` class will appear.
+- starting from no faces detected, when an unknown face is detected, any modules tagged with the `default` class will remain unchanged, because `default` provides both the Noface and the Unknown states.
+- starting from no faces detected, when an known face is detected, any modules tagged with the `default` class will be hidden and modules tagged with `known` or "specific user's name" ie to specify modules for a certain user, use their name as the class name
+
+
+The state to class mappings are:
+<table>
+  <thead>
+    <tr>
+      <td></td>
+      <td colspan=3>States that the class is active in</td>
+    </tr>
+    <tr>
+      <td><b>Class</b></td>
+      <td><b>Noface</b></td>
+      <td><b>Unknown</b></td>
+      <td><b>Known</b></td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>noface</code></td>
+      <td align=center>Y</td>
+      <td align=center></td>
+      <td align=center></td>
+    </tr>
+    <tr>
+      <td><code>unknown</code></td>
+      <td align=center></td>
+      <td align=center>Y</td>
+      <td align=center></td>
+    </tr>
+    <tr>
+      <td><code>known</code></td>
+      <td align=center></td>
+      <td align=center></td>
+      <td align=center>Y</td>
+    </tr>
+    <tr>
+      <td><code>default</code></td>
+      <td align=center>Y</td>
+      <td align=center>Y</td>
+      <td align=center></td>
+    </tr>
+    <tr>
+      <td><code>everyone</code></td>
+      <td align=center></td>
+      <td align=center>Y</td>
+      <td align=center>Y</td>
+    </tr>
+    <tr>
+      <td><code>always</code></td>
+      <td align=center>Y</td>
+      <td align=center>Y</td>
+      <td align=center>Y</td>
+    </tr>
+    <tr>
+      <td><code>"specific user's name"</code></td>
+      <td align=center></td>
+      <td align=center></td>
+      <td align=center>Y</td>
+    </tr>
+  </tbody>
+</table>
+
+```js
+{
+    module: 'example_module',
+    position: 'top_left',
+    // Set your classes here seperated by a space
+    // Always shown
+    classes: 'always'
+},
+{
+    module: 'example_module_2',
+    position: 'top_left',
+    // Only shown for Thierry and James
+    classes: 'thierry james'
+},
+{
+    module: 'example_module_3',
+    position: 'top_right',
+    // Only shown for James
+    classes: 'james'
+}
+{
+    module: 'example_module_4',
+    position: 'top_right',
+    // Only shown for known (recognised users)
+    classes: 'known'
+}
+```
+
+## Known Issues
+
+- Support for multiple concurrently logged in users is not yet complete.
 
 ## Credits
 
 - Adrian Rosebrock for the great tutorial: https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/
 - Normyx for the first version of Face-Recognition for MagicMirror: https://github.com/normyx/MMM-Facial-Recognition-OCV3
+
+

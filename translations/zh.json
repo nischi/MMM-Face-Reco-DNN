@@ -1,5 +1,6 @@
 {
-  "message": "你好 %person, 很高興看到你!",
+  "knownlogin": "你好 %person!",
+  "unknownlogin": "你好 %person, 很高興看到你!",
   "title": "臉部識別",
   "stranger": "陌生人"
 }

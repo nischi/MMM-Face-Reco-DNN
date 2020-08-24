@@ -48,7 +48,7 @@ sudo dpkg -i opencv_4.1.2-1_armhf.deb
 ### <a name="pip"></a>pip
 
 If you have both python v2 and python v3 installed then you may need to be specific in the use of either pip or pip3. If you are targetting python v3 then you will need to substitute pip3 instead of pip in the example commmands below.
-If you have only a single version of python installed then you may use pip.
+If you have only a single version of python installed then you may use pip and it will use the only installed version of python.
 
 ### <a name="dlib"></a>dlib
 

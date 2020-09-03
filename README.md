@@ -49,14 +49,14 @@ sudo dpkg -i opencv_4.1.2-1_armhf.deb
 ### <a name="pip"></a>pip
 
 If you have both python v2 and python v3 installed then you may need to be specific in the use of either pip or pip3. If you are targetting python v3 then you will need to substitute pip3 instead of pip in the example commmands below.
-If you have only a single version of python installed then you may use pip.
+If you have only a single version of python installed then you may use pip3.
 
 ### <a name="dlib"></a>dlib
 
 You can install dlib easily using pip with the following command.
 
 ```sh
-pip install dlib
+pip3 install dlib
 ```
 
 ### <a name="fr"></a>face_recognition
@@ -64,7 +64,7 @@ pip install dlib
 You can install the face_recognition library over pip too.
 
 ```sh
-pip install face_recognition
+pip3 install face_recognition
 ```
 
 If you have issues installing, this [tutorial](https://www.pyimagesearch.com/2017/05/01/install-dlib-raspberry-pi/) may be helpful.
@@ -74,7 +74,7 @@ If you have issues installing, this [tutorial](https://www.pyimagesearch.com/201
 You can install imutils over pip.
 
 ```sh
-pip install imutils
+pip3 install imutils
 ```
 
 ### <a name="numpy"></a>numpy
@@ -82,7 +82,7 @@ pip install imutils
 You can install numpy over pip.
 
 ```sh
-pip install numpy
+pip3 install numpy
 ```
 
 ## Compatibility

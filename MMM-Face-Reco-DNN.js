@@ -102,6 +102,9 @@ Module.register('MMM-Face-Reco-DNN', {
   // ----------------------------------------------------------------------------------------------------
   login_user: function(name) {
     var self = this;
+    var thisUserClasses;
+    var existingClasses;
+    var newClassList;
     
     this.config.debug && Log.log('User list before login:' + this.users);
     Log.log('Logged in user:' + name);
@@ -109,36 +112,47 @@ Module.register('MMM-Face-Reco-DNN', {
     this.users.push(name);
     this.config.debug && Log.log('User list after login:' + this.users);
 
+    if (this.users.length===1) {
+      // this is the login of the first user
+      // this means we are coming from a noface state
+      existingClasses=this.config.classes_noface;
+    } else if (this.users.length>1) {
+      // there is at least one user already logged in so the list of existing classes comes from this.userClasses
+      existingClasses=this.get_class_set(this.userClasses);
+    }
+
+    this.config.debug && Log.log('User Classes Before Login');
+    this.config.debug && Log.log(existingClasses);
+
     // what we do here depends on if we recognise the user or not
     if (name === 'unknown') {
       // this is the state of an unknown face
       // we want to show the new classes allowed by this target state (unknown state)
-      this.show_modules(this.config.classes_unknown,this.config.classes_noface);
-      
-      // we want to hide the old classes from the previous state (noface state)
-      this.hide_modules(this.config.classes_noface,this.config.classes_unknown);
-      
-      this.userClasses[name]=this.config.classes_unknown;
-
+      thisUserClasses=this.config.classes_unknown;
     } else {
-     // this is the state of a known face
-     // we want to show the new classes allowed by this target state (known state)
-     // copy the config classes to a new array
-     var newClasses=this.config.classes_known.slice();
-     this.config.debug && Log.log('Adding ' + name + ' to classlist:' + this.config.classes_known);
-     newClasses.push(name.toLowerCase());
-     
-     // we want to show the new classes allowed by this target state (known state)
-     this.show_modules(newClasses,this.config.classes_noface);
-      
-      // we want to hide the old classes from the previous state (noface state)
-      this.hide_modules(this.config.classes_noface,newClasses);
-
-      this.userClasses[name]=newClasses;
+      // this is the state of a known face
+      // we want to show the new classes allowed by this target state (known state)
+      // copy the config classes to a new array
+      var newClasses=this.config.classes_known.slice();
+      this.config.debug && Log.log('Adding ' + name + ' to classlist:' + this.config.classes_known);
+      // add the specific classes for this new known user
+      newClasses.push(name.toLowerCase());
+      thisUserClasses=newClasses;
     }
 
+    // add the new user's classes to the list of user classes
+    this.userClasses[name]=thisUserClasses;
     this.config.debug && Log.log('User Classes After Login');
     this.config.debug && Log.log(this.userClasses);
+    
+    // so the full list of all classes that should be shown is now in userClasses
+    newClassList=this.get_class_set(this.userClasses);
+
+    // show all the new classes from the new user except the existing classes
+    this.show_modules(newClassList,existingClasses);
+      
+    // we want to hide the old classes from the previous state, except those shown by the new user
+    this.hide_modules(existingClasses,newClassList);
 
     // now show a welcome message
     if (this.config.welcomeMessage) {

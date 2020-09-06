@@ -55,7 +55,7 @@ Module.register('MMM-Face-Reco-DNN', {
     dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
     // How much distance between faces to consider it a match. Lower is more strict.
     tolerance: 0.6,
-    // allow multiple concurrent user logins, 0=no, 1=yes
+    // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
     multiUser: 0,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
@@ -64,6 +64,7 @@ Module.register('MMM-Face-Reco-DNN', {
 
   timouts: {},
   users: [],
+  userClasses: [],
 
   // ----------------------------------------------------------------------------------------------------
   start: function() {
@@ -102,8 +103,11 @@ Module.register('MMM-Face-Reco-DNN', {
   login_user: function(name) {
     var self = this;
     
+    this.config.debug && Log.log('User list before login:' + this.users);
     Log.log('Logged in user:' + name);
-    this.config.debug && Log.log('User list:' + this.users);
+    // user not currently logged in so add them to the list of logged in users
+    this.users.push(name);
+    this.config.debug && Log.log('User list after login:' + this.users);
 
     // what we do here depends on if we recognise the user or not
     if (name === 'unknown') {
@@ -113,13 +117,15 @@ Module.register('MMM-Face-Reco-DNN', {
       
       // we want to hide the old classes from the previous state (noface state)
       this.hide_modules(this.config.classes_noface,this.config.classes_unknown);
+      
+      this.userClasses[name]=this.config.classes_unknown;
 
     } else {
      // this is the state of a known face
      // we want to show the new classes allowed by this target state (known state)
      // copy the config classes to a new array
      var newClasses=this.config.classes_known.slice();
-     this.config.debug && Log.log('Adding ' + name + ' to ' + this.config.classes_known);
+     this.config.debug && Log.log('Adding ' + name + ' to classlist:' + this.config.classes_known);
      newClasses.push(name.toLowerCase());
      
      // we want to show the new classes allowed by this target state (known state)
@@ -127,8 +133,13 @@ Module.register('MMM-Face-Reco-DNN', {
       
       // we want to hide the old classes from the previous state (noface state)
       this.hide_modules(this.config.classes_noface,newClasses);
+
+      this.userClasses[name]=newClasses;
     }
-    
+
+    this.config.debug && Log.log('User Classes After Login');
+    this.config.debug && Log.log(this.userClasses);
+
     // now show a welcome message
     if (this.config.welcomeMessage) {
       var person = name;
@@ -157,61 +168,113 @@ Module.register('MMM-Face-Reco-DNN', {
   logout_user: function(name) {
     var self = this;
 
+    this.config.debug && Log.log('User list before logout:' + this.users);
     Log.log('Logged out user:' + name);
-    this.config.debug && Log.log('User list:' + this.users);
+    
+    // just double check the the user we are logging out is actually logged in
+    if (this.users.includes(name)) {
+      // it does include the user so all good
 
-    // see how many users are left
-    if (this.users.length === 0) {
-      // no users left, so we are going to the noface state
-      // the name of the logging out user determines what state we are coming from
+      // remove the user from the list of users
+      this.users = this.users.filter(function(u) {
+        return u !== name;
+      });
       
-      // what we do here depends on if we recognise the user or not
-      if (name === 'unknown') {
-       // this is the transition from the unknown state to the noface state
+      this.config.debug && Log.log('User list after logout:' + this.users);
+      
+      // remove the users property from the list of classes
+      // copy the class list to another array before deleting the logging out user
+      this.config.debug && Log.log('User Classes Before Logout');
+      this.config.debug && Log.log(this.userClasses);
+      var oldUserClasses=Object.assign({},this.userClasses); // assign works doing a shallow copy because the object is simply enough
 
-       // we want to show the new classes allowed by this target state (noface state)
-       this.show_modules(this.config.classes_noface,this.config.classes_unknown);
+      // delete the user from the list of user classes
+      delete this.userClasses[name];
 
-       // we want to hide the old classes from the previous state (unknown state)
-       this.hide_modules(this.config.classes_unknown,this.config.classes_noface);
-       
-      } else {
-       // this is the transition from the known state to the noface state
-
-       // we want to show the new classes allowed by this target state (noface state)
-       // copy the config classes to a new array
-       var oldClasses=this.config.classes_known.slice();
-       this.config.debug && Log.log('Adding ' + name + ' to ' + this.config.classes_known);
-       oldClasses.push(name.toLowerCase());
-       
-       // we want to show the new classes allowed by this target state (noface state)
-       this.show_modules(this.config.classes_noface,oldClasses);
+      // see how many users are left
+      if (this.users.length === 0) {
+        // no users left, so we are going to the noface state
+        // the name of the logging out user determines what state we are coming from
         
-       // we want to hide the old classes from the previous state (known state)
-       this.hide_modules(oldClasses,this.config.classes_noface);
+        // what we do here depends on if we recognise the user or not
+        if (name === 'unknown') {
+         // this is the transition from the unknown state to the noface state
+
+         // we want to show the new classes allowed by this target state (noface state)
+         this.show_modules(this.config.classes_noface,this.config.classes_unknown);
+
+         // we want to hide the old classes from the previous state (unknown state)
+         this.hide_modules(this.config.classes_unknown,this.config.classes_noface);
+         
+        } else {
+         // this is the transition from the known state to the noface state
+
+         // we want to show the new classes allowed by this target state (noface state)
+         // copy the config classes to a new array
+         var oldClasses=this.config.classes_known.slice();
+         this.config.debug && Log.log('Adding ' + name + ' to classlist: ' + this.config.classes_known);
+         oldClasses.push(name.toLowerCase());
+         
+         // we want to show the new classes allowed by this target state (noface state)
+         this.show_modules(this.config.classes_noface,oldClasses);
+          
+         // we want to hide the old classes from the previous state (known state)
+         this.hide_modules(oldClasses,this.config.classes_noface);
+        }
+      } else {
+        // in this transition we go from multiple users to a lower number of users, leaving one or more logged in
+        // to do this properly you have to go through all the remaining users and work out what classes would be left after we remove this one user
+
+        this.config.debug && Log.log('User Classes Remaining');
+        this.config.debug && Log.log(this.userClasses);
+
+        // build shownClasses to be the list of classes that are showing now
+        var shownClasses=this.get_class_set(oldUserClasses);
+        this.config.debug && Log.log('Returned Showing List of Classes');
+        this.config.debug && Log.log(shownClasses);
+
+        // build remainingClasses to be the list of classes that still should be shown
+        var remainingClasses=this.get_class_set(this.userClasses);
+        this.config.debug && Log.log('Returned Remaining List of Classes');
+        this.config.debug && Log.log(remainingClasses);
+
+        this.config.debug && Log.log('Hide:' + shownClasses + ' except:' + remainingClasses);
+        this.hide_modules(shownClasses,remainingClasses);
+        
       }
     } else {
-      // in this transition we go from multiple users to a lower number of users, leaving one or more logged in
-      // the logic for this is not fully developed
-      // to do this properly you have to go through all the remaining users and work out what classes would be left after we remove this one user
-      // start by removing only the classes related to this user
-      // this might not always be right as you might leave behind an unknown user etc
-      // what we do here depends on if we recognise the user or not
-      if (name === 'unknown') {
-       // we want to hide the old classes related to an unknown users
-       this.config.debug && Log.log('Hiding all old classes:' + this.config.classes_unknown);
-       
-      } else {
-       var oldClasses=this.config.classes_known;
-       oldClasses.push(name.toLowerCase());
-       
-       // we want to hide the old classes related to a known user
-       this.hide_modules(oldClasses,0);
-      }
+      // not how we get to here, but we do. It should be stopped in the socketNotificationReceived function but somehow either something else calls this function or that code does not work
+      this.config.debug && Log.log('Detected a logout_user call for ' + name + ' but they were not logged in.');
     }
     
   },
 
+  // ----------------------------------------------------------------------------------------------------
+  get_class_set: function(userClasses) {
+    // function to take all the classes from logged in users and work out the total set (no duplicates) of the classes
+    var self = this;
+
+    // all the classes from all the logged in users are in this.userClasses like
+    // this.userClasses[user1]=array of classes
+    // this.userClasses[user2]=array of classes
+    // etc
+    
+    var classList=[];
+    var finalClasses=[];
+    
+    Object.values(userClasses).forEach(function(classes) {
+      // classes is an array of classes for a user
+      classes.forEach(val=>classList[val]=1);      
+    });
+
+    // classList should now have a unique list of the classes as properties
+    Object.keys(classList).forEach(function(val) {
+      // val is a string which is the name of a class
+      finalClasses.push(val);
+    });
+    
+    return finalClasses;
+  },
   // ----------------------------------------------------------------------------------------------------
   show_modules: function(showClasses,exceptClasses) {
     // show modules with "showClasses" except for those with "exceptClasses"
@@ -295,43 +358,53 @@ Module.register('MMM-Face-Reco-DNN', {
 
     // somebody has logged in
     if (payload.action === 'login') {
+      var loginCount=0;
       for (user of payload.users) {
         if (user != null) {
           
           // if there are currently no users logged in OR we allow multiple users
-          if (this.users.length === 0 || this.config.multiUser) {
+          this.config.debug && Log.log('Number of logged in users:' + this.users.length + ', Allowed Number of Users:' + this.config.multiUser);
+          if (this.users.length === 0 || this.users.length < this.config.multiUser) {
             // check if the user is already logged in
             if (!this.users.includes(user)) {
-              // user not currently logged in so add them to the list of logged in users
-              this.users.push(user);
               // run the login procedure
               this.login_user(user);
+              // increment the counter
+              loginCount++;
             } else {
               this.config.debug && Log.log('Detected ' + user + ' again.');
             }
           } else {
-            this.config.debug && Log.log('Detected a login event for ' + user + ' but multiple concurrent logins is disabled and ' + this.users + ' is already logged in.');
+            this.config.debug && Log.log('Detected a login event for ' + user + ' but multiple concurrent logins is limited to ' + this.config.multiUser +  ' and ' + this.users + ' is already logged in.');
           }
 
           // clear any timeouts the user might have so that they stay logged in
           if (this.timouts[user] != null) {
+            this.config.debug && Log.log('Clearing timeouts for ' + user);
+            this.config.debug && Log.log('Remaining timeouts BEFORE:')
+            this.config.debug && Log.log(this.timouts);
             clearTimeout(this.timouts[user]);
+            this.config.debug && Log.log('Remaining timeouts AFTER:')
+            this.config.debug && Log.log(this.timouts);
           }
         }
       }
-	  
-	  // We still need to broadcast MM notification for backward compatability.
-      this.sendNotification('USERS_LOGIN', payload.users);
+
+      if (loginCount>0) {
+         // We still need to broadcast MM notification for backward compatability.
+         this.config.debug && Log.log('Detected ' + loginCount + ' logins.');
+         this.sendNotification('USERS_LOGIN', payload.users);
+      }
     } else if (payload.action === 'logout') {
+      var logoutCount=0;
       for (user of payload.users) {
         if (user != null) {
           // see if user is even logged in, since you can only log out if you are actually logged in
           if (this.users.includes(user)) {
+            this.config.debug && Log.log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
             this.timouts[user] = setTimeout(function() {
-              self.users = self.users.filter(function(u) {
-                return u !== user;
-              });
               self.logout_user(user);
+              logoutCount++;
             }, this.config.logoutDelay);
           } else {
             this.config.debug && Log.log('Detected a logout event for ' + user + ' but they were not logged in.');
@@ -339,7 +412,10 @@ Module.register('MMM-Face-Reco-DNN', {
         }
       }
 
-      this.sendNotification('USERS_LOGOUT', payload.users);
+      if (logoutCount>0) {
+         this.config.debug && Log.log('Detected ' + logoutCount + ' logouts.');
+         this.sendNotification('USERS_LOGOUT', payload.users);
+      }
     }
   },
 

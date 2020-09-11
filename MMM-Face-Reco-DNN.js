@@ -417,6 +417,10 @@ Module.register('MMM-Face-Reco-DNN', {
           if (this.users.includes(user)) {
             this.config.debug && Log.log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
             this.timouts[user] = setTimeout(function() {
+        
+              // Broadcast notificaiton that we are about to hide modules.
+              // Ideally this would be USERS_LOGOUT to be consistent with hide/show timer, but to prevent regression using a new type.
+              self.sendNotification('USERS_LOGOUT_MODULES', user);
               self.logout_user(user);
               logoutCount++;
             }, this.config.logoutDelay);

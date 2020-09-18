@@ -47,7 +47,7 @@ ap.add_argument("-e", "--encodings", type=str, required=False, default="encoding
 	help="path to serialized db of facial encodings")
 ap.add_argument("-p", "--usePiCamera", type=int, required=False, default=1,
 	help="Is using picamera or builtin/usb cam")
-ap.add_argument("-s", "--source", type=str, required=False, default=0,
+ap.add_argument("-s", "--source", type=int, required=False, default=0,
 	help="Use 0 for /dev/video0 or 'http://link.to/stream'")
 ap.add_argument("-r", "--rotateCamera", type=int, required=False, default=0,
 	help="rotate camera")

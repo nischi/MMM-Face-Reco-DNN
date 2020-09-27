@@ -40,10 +40,10 @@ If you install OpenCV in a virtual environment, please do not forget to set the 
 If you are planning to run OpenCV on Raspbian Buster, you can follow [these steps](https://github.com/cyysky/OpenCV-4.1.2-for-Raspbian) to install pre-compilled OpenCV v.4.2.1 package. This will save time for OpenCV compilation.
 
 ```sh
-wget https://github.com/cyysky/OpenCV-Raspberry-Pi-4-Package-for-Python/raw/master/opencv_4.3.0-1_armhf.deb
-sudo dpkg -i opencv_4.3.0-1_armhf.deb
+wget https://github.com/cyysky/OpenCV-4.1.2-for-Raspbian/raw/master/opencv_4.1.2-1_armhf.deb
+sudo dpkg -i opencv_4.1.2-1_armhf.deb
 sudo apt-get -f install
-sudo dpkg -i opencv_4.3.0-1_armhf.deb
+sudo dpkg -i opencv_4.1.2-1_armhf.deb
 ```
 
 ### <a name="pip"></a>pip

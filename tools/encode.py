@@ -33,7 +33,7 @@ for (i, imagePath) in enumerate(imagePaths):
 	print("[INFO] processing image {}/{} - {}".format(i + 1,
 		len(imagePaths),
 		imagePath))
-	name = imagePath.split(os.path.sep)[-2]
+	name = os.path.basename(os.path.dirname(imagePath))
 
 	# load the input image and convert it from RGB (OpenCV ordering)
 	# to dlib ordering (RGB)

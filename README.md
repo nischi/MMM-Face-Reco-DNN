@@ -96,6 +96,15 @@ I have tested the following dependency versions. Let me know if the module works
 | face_recognition | 1.2.3    |
 | imutils          | 0.5.3    |
 
+
+Works also with:
+| Dependency       | Versions |
+| ---------------- | -------- |
+| OpenCV           | 4.5      |
+| dlib             | 19.21.0  |
+| face_recognition | 1.3.0    |
+| imutils          | 0.5.3    |
+
 ## Install the Module
 
 Load this module directly from GitHub using the following commands.

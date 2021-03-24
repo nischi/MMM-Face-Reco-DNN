@@ -96,6 +96,7 @@ Module.register('MMM-Face-Reco-DNN', {
       it: 'translations/it.json',
       bg: 'translations/bg.json',
       ru: 'translations/ru.json',
+      nb: 'translations/nb.json',
     };
   },
 

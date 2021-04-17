@@ -47,7 +47,7 @@ ap.add_argument("-e", "--encodings", type=str, required=False, default="encoding
 	help="path to serialized db of facial encodings")
 ap.add_argument("-p", "--usePiCamera", type=int, required=False, default=1,
 	help="Is using picamera or builtin/usb cam")
-ap.add_argument("-s", "--source", type=int, required=False, default=0,
+ap.add_argument("-s", "--source", required=False, default=0,
 	help="Use 0 for /dev/video0 or 'http://link.to/stream'")
 ap.add_argument("-r", "--rotateCamera", type=int, required=False, default=0,
 	help="rotate camera")
@@ -76,10 +76,15 @@ detector = cv2.CascadeClassifier(args["cascade"])
 # initialize the video stream and allow the camera sensor to warm up
 printjson("status", "starting video stream...")
 
+if args["source"].isdigit():
+    src = int(args["source"])
+else:
+    src = args["source"]
+
 if args["usePiCamera"] >= 1:
 	vs = VideoStream(usePiCamera=True, rotation=args["rotateCamera"]).start()
 else:
-	vs = VideoStream(src=args["source"]).start()
+	vs = VideoStream(src=src).start()
 time.sleep(2.0)
 
 # variable for prev names

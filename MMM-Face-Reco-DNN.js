@@ -48,6 +48,10 @@ Module.register('MMM-Face-Reco-DNN', {
     pythonPath: null,
     // Boolean to toggle welcomeMessage
     welcomeMessage: true,
+    // Dictionary for person name mapping in welcome message
+    // Allows for displaying name with complex character sets in welcome message 
+    // e.g. jerome => Jérôme, hideyuki => 英之, mourad => مراد 
+    usernameDisplayMapping: null,
     // Save some pictures from recognized people, if unknown we save it in folder "unknown"
     // So you can extend your dataset and retrain it afterwards for better recognitions
     extendDataset: false,
@@ -165,8 +169,12 @@ Module.register('MMM-Face-Reco-DNN', {
         person = this.translate('stranger');
         welcomeMessage = this.translate('unknownlogin').replace('%person', person);
       } else {
-        // set up the slightly different message for a known person
-        welcomeMessage = this.translate('knownlogin').replace('%person', person);
+        // set up the slightly different message for a known person, attempt to find a Name mapping for display purposes
+        var personDisplayName = person;
+        if (this.config.usernameDisplayMapping && this.config.usernameDisplayMapping[person]) {
+          personDisplayName = this.config.usernameDisplayMapping[person];
+        } 
+        welcomeMessage = this.translate('knownlogin').replace('%person', personDisplayName);
       }
 
       this.sendNotification('SHOW_ALERT', {

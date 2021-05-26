@@ -49,7 +49,8 @@ Module.register('MMM-Face-Reco-DNN', {
     // Boolean to toggle welcomeMessage
     welcomeMessage: true,
     // Dictionary for person name mapping in welcome message
-    // Allows for displaying name with complex character sets in welcome message e.g. jerome => Jérôme, hideyuki => 英之
+    // Allows for displaying name with complex character sets in welcome message 
+    // e.g. jerome => Jérôme, hideyuki => 英之, mourad => مراد 
     usernameDisplayMapping: null,
     // Save some pictures from recognized people, if unknown we save it in folder "unknown"
     // So you can extend your dataset and retrain it afterwards for better recognitions

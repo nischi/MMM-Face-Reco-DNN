@@ -232,6 +232,9 @@ To setup the module in MagicMirror², add the following section to the `config.j
       pythonPath: null,
       // Should a welcome message be shown using the MagicMirror alerts module?
       welcomeMessage: true,
+      // Dictionary for person name mapping in welcome message
+      // Allows for displaying name with complex character sets in welcome message e.g. jerome => Jérôme, hideyuki => 英之
+      usernameDisplayMapping: null,
       // Capture new pictures of recognized people, if unknown we save it in folder "unknown"
       // So you can extend your dataset and retrain it afterwards for better recognitions
       extendDataset: false,
@@ -276,6 +279,7 @@ The module sends notifications if a user is logged in or logged out. In addition
 | `animationSpeed`  | How long in milliseconds modules take to hide and show. <br />**Default Value:** `0`                                                                                                                     |
 | `pythonPath`      | Path to Python to run the face recognition. <br />**Default Value:** `null`                                                                                                                              |
 | `welcomeMessage`  | Should a welcome message be shown using the MagicMirror alerts module? <br />**Default Value:** `true`                                                                                                   |
+| `usernameDisplayMapping`  | Dictionary for mapping username (directory name) to more complex character sets <br />**Default Value:** `null`                                                                                                   |
 | `extendDataset`   | Capture new pictures of recognized people, if unknown we save it in folder "unknown". So you can extend your dataset and retrain it afterwards for better recognitions. <br />**Default Value:** `false` |
 | `dataset`         | If `extendDataset` is true, you need to set the full path of the dataset as well. <br /> **Default Value:** `modules/MMM-Face-Reco-DNN/dataset/`                                                         |
 | `multiUser`       | Allow multiple concurrent user logins, 0=no, 1=yes <br /> **Default Value:** `0`                                                                                                                         |

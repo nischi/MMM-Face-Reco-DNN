@@ -169,7 +169,7 @@ Module.register('MMM-Face-Reco-DNN', {
         welcomeMessage = this.translate('unknownlogin').replace('%person', person);
       } else {
         // set up the slightly different message for a known person, attempt to find a Name mapping for display purposes
-        personDisplayName = usernameDisplayMapping[person] ? usernameDisplayMapping[person] : person;
+        var personDisplayName = this.config.usernameDisplayMapping[person] ? this.config.usernameDisplayMapping[person] : person;
         welcomeMessage = this.translate('knownlogin').replace('%person', personDisplayName);
       }
 

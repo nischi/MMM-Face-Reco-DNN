@@ -137,15 +137,16 @@ while True:
 	# compute the facial embeddings for each face bounding box
 	encodings = face_recognition.face_encodings(rgb, boxes)
 	names = []
-	minDistance = 0.0
 
 	# loop over the facial embeddings
 	for encoding in encodings:
 		# compute distances between this encoding and the faces in dataset
 		distances = face_recognition.face_distance(data["encodings"], encoding)
 
-		# the smallest distance is the closest to the encoding
-		minDistance = min(distances)
+		minDistance = 1.0
+		if len(distances) > 0:
+			# the smallest distance is the closest to the encoding
+			minDistance = min(distances)
 
 		# save the name if the distance is below the tolerance
 		if minDistance < tolerance:

@@ -104,6 +104,13 @@ Works also with:
 | dlib             | 19.21.0  |
 | face_recognition | 1.3.0    |
 | imutils          | 0.5.3    |
+or
+| Dependency       | Versions |
+| ---------------- | -------- |
+| OpenCV           | 4.6.0.66 |
+| dlib             | 19.24.0  |
+| face_recognition | 1.3.0    |
+| imutils          | 0.5.4    |
 
 ## Install the Module
 

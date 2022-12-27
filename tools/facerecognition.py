@@ -4,6 +4,7 @@
 # import the necessary packages
 from imutils.video import FPS, VideoStream
 from datetime import datetime
+from imutils import adjust_brightness_contrast
 import face_recognition
 import argparse
 import imutils
@@ -65,6 +66,10 @@ ap.add_argument("-ds", "--dataset", required=False, default="../dataset/",
 	help="path to input directory of faces + images")
 ap.add_argument("-t", "--tolerance", type=float, required=False, default=0.6,
 	help="How much distance between faces to consider it a match. Lower is more strict.")
+ap.add_argument('-br', '--brightness', default=0,
+	help='Brightness, negative is darker, positive is brighter')
+ap.add_argument('-co', '--contrast', default=0,
+	help='Contrast, positive value for more contrast')
 args = vars(ap.parse_args())
 
 # load the known faces and embeddings along with OpenCV's Haar
@@ -108,6 +113,7 @@ while True:
 	# grab the frame from the threaded video stream and resize it
 	# to 500px (to speedup processing)
 	originalFrame = vs.read()
+	originalFrame = adjust_brightness_contrast(originalFrame, contrast=args["contrast"], brightness=args["brightness"])
 	frame = imutils.resize(originalFrame, width=500)
 
 	if args["method"] == "dnn":

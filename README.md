@@ -239,6 +239,10 @@ To setup the module in MagicMirror², add the following section to the `config.j
       tolerance: 0.6,
       // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
       multiUser: 0,
+      // resolution of the image
+      resolution: [1280, 960],
+      // width of the image for processing
+      processWidth: 500,
     }
 }
 ```
@@ -280,6 +284,8 @@ The module sends notifications if a user is logged in or logged out. In addition
 | `extendDataset`          | Capture new pictures of recognized people, if unknown we save it in folder "unknown". So you can extend your dataset and retrain it afterwards for better recognitions. <br />**Default Value:** `false`                                                                                          |
 | `dataset`                | If `extendDataset` is true, you need to set the full path of the dataset as well. <br /> **Default Value:** `modules/MMM-Face-Reco-DNN/dataset/`                                                                                                                                                  |
 | `multiUser`              | Allow multiple concurrent user logins, 0=no, 1=yes <br /> **Default Value:** `0`                                                                                                                                                                                                                  |
+| `resolution`             | Resolution of the image [x, y] <br /> **Default Value:** `[1280, 960]`                                                                                                                                                                                                                            |
+| `processWidth`           | Width of the image which will be processed <br /> **Default Value:** `500`                                                                                                                                                                                                                        |
 
 ## Facial Recognition States
 

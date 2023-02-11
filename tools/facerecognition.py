@@ -70,7 +70,7 @@ ap.add_argument('-br', '--brightness', default=0,
 	help='Brightness, negative is darker, positive is brighter')
 ap.add_argument('-co', '--contrast', default=0,
 	help='Contrast, positive value for more contrast')
-ap.add_argument('-res', '--resolution', default=[1920, 1080],
+ap.add_argument('-res', '--resolution', default="1920,1080",
 	help='Resolution of the image')
 ap.add_argument('-pw', '--processWidth', type=int, default=500,
 	help='Resolution of the image which will be processed from OpenCV')
@@ -90,10 +90,11 @@ if args["source"].isdigit():
 else:
     src = args["source"]
 
-resolution = (int(args["resolution"][0]), int(args["resolution"][1]))
+resolution = args["resolution"].split(",")
+resolution = (int(resolution[0]), int(resolution[1]))
 processWidth = args["processWidth"]
-printjson("resolution", resolution)
-printjson("processWidth", processWidth)
+printjson("status", resolution)
+printjson("status", processWidth)
 
 if args["usePiCamera"] >= 1:
 	vs = VideoStream(usePiCamera=True, rotation=args["rotateCamera"], resolution=resolution).start()

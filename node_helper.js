@@ -34,6 +34,8 @@ module.exports = NodeHelper.create({
         '--tolerance=' + this.config.tolerance,
         '--brightness=' + this.config.brightness,
         '--contrast=' + this.config.contrast,
+        '--resolution=' + this.config.resolution,
+        '--processWidth=' + this.config.processWidth,
       ],
     };
 

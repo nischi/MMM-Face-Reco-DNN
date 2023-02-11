@@ -65,6 +65,10 @@ Module.register('MMM-Face-Reco-DNN', {
     tolerance: 0.6,
     // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
     multiUser: 0,
+    // resoltuion of the image
+    resolution: [1280, 960],
+    // width of the image for processing
+    processWidth: 500,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
   },

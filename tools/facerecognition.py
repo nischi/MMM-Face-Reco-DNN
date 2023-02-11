@@ -70,6 +70,10 @@ ap.add_argument('-br', '--brightness', default=0,
 	help='Brightness, negative is darker, positive is brighter')
 ap.add_argument('-co', '--contrast', default=0,
 	help='Contrast, positive value for more contrast')
+ap.add_argument('-res', '--resolution', default="1920,1080",
+	help='Resolution of the image')
+ap.add_argument('-pw', '--processWidth', type=int, default=500,
+	help='Resolution of the image which will be processed from OpenCV')
 args = vars(ap.parse_args())
 
 # load the known faces and embeddings along with OpenCV's Haar
@@ -86,10 +90,16 @@ if args["source"].isdigit():
 else:
     src = args["source"]
 
+resolution = args["resolution"].split(",")
+resolution = (int(resolution[0]), int(resolution[1]))
+processWidth = args["processWidth"]
+printjson("status", resolution)
+printjson("status", processWidth)
+
 if args["usePiCamera"] >= 1:
-	vs = VideoStream(usePiCamera=True, rotation=args["rotateCamera"]).start()
+	vs = VideoStream(usePiCamera=True, rotation=args["rotateCamera"], resolution=resolution).start()
 else:
-	vs = VideoStream(src=src).start()
+	vs = VideoStream(src=src, resolution=resolution).start()
 time.sleep(2.0)
 
 # variable for prev names
@@ -114,7 +124,11 @@ while True:
 	# to 500px (to speedup processing)
 	originalFrame = vs.read()
 	originalFrame = adjust_brightness_contrast(originalFrame, contrast=args["contrast"], brightness=args["brightness"])
-	frame = imutils.resize(originalFrame, width=500)
+
+	if processWidth != resolution[0]:
+		frame = imutils.resize(originalFrame, width=processWidth)
+	else:
+		frame = originalFrame
 
 	if args["method"] == "dnn":
 		# load the input image and convert it from BGR (OpenCV ordering)

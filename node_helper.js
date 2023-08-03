@@ -18,7 +18,7 @@ module.exports = NodeHelper.create({
     const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
       mode: 'json',
-      stderrParser: (line) => JSON.stringify(line),
+      stderrParser: line => JSON.stringify(line),
       args: [
         '--cascade=' + this.config.cascade,
         '--encodings=' + this.config.encodings,
@@ -44,10 +44,7 @@ module.exports = NodeHelper.create({
     }
 
     // Start face reco script
-    self.pyshell = new PythonShell(
-      'modules/' + this.name + '/tools/facerecognition.py',
-      options
-    );
+    self.pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', options);
 
     // check if a message of the python script is comming in
     self.pyshell.on('message', function (message) {
@@ -58,14 +55,7 @@ module.exports = NodeHelper.create({
 
       // Somebody new are in front of the camera, send it back to the Magic Mirror Module
       if (message.hasOwnProperty('login')) {
-        console.log(
-          '[' +
-            self.name +
-            '] ' +
-            'Users ' +
-            message.login.names.join(' - ') +
-            ' logged in.'
-        );
+        console.log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
         self.sendSocketNotification('user', {
           action: 'login',
           users: message.login.names,
@@ -74,14 +64,7 @@ module.exports = NodeHelper.create({
 
       // Somebody left the camera, send it back to the Magic Mirror Module
       if (message.hasOwnProperty('logout')) {
-        console.log(
-          '[' +
-            self.name +
-            '] ' +
-            'Users ' +
-            message.logout.names.join(' - ') +
-            ' logged out.'
-        );
+        console.log('[' + self.name + '] ' + 'Users ' + message.logout.names.join(' - ') + ' logged out.');
         self.sendSocketNotification('user', {
           action: 'logout',
           users: message.logout.names,

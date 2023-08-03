@@ -27,8 +27,7 @@ Module.register('MMM-Face-Reco-DNN', {
     // Set of modules that are always shown - show if there is a face or no face detected
     alwaysClass: 'always',
     // xml to recognize with haarcascae
-    cascade:
-      'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
+    cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
     encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
     // You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera)
@@ -86,22 +85,9 @@ Module.register('MMM-Face-Reco-DNN', {
 
     // there are 3 states (noface, unknown face, known face). Each of these has classes that allow them
     // this configuration defines which classes provide which states
-    this.config.classes_noface = [
-      this.config.noFaceClass,
-      this.config.defaultClass,
-      this.config.alwaysClass,
-    ];
-    this.config.classes_unknown = [
-      this.config.unknownClass,
-      this.config.defaultClass,
-      this.config.everyoneClass,
-      this.config.alwaysClass,
-    ];
-    this.config.classes_known = [
-      this.config.knownClass,
-      this.config.everyoneClass,
-      this.config.alwaysClass,
-    ];
+    this.config.classes_noface = [this.config.noFaceClass, this.config.defaultClass, this.config.alwaysClass];
+    this.config.classes_unknown = [this.config.unknownClass, this.config.defaultClass, this.config.everyoneClass, this.config.alwaysClass];
+    this.config.classes_known = [this.config.knownClass, this.config.everyoneClass, this.config.alwaysClass];
   },
 
   // ----------------------------------------------------------------------------------------------------
@@ -158,10 +144,7 @@ Module.register('MMM-Face-Reco-DNN', {
       // we want to show the new classes allowed by this target state (known state)
       // copy the config classes to a new array
       var newClasses = this.config.classes_known.slice();
-      this.config.debug &&
-        Log.log(
-          'Adding ' + name + ' to classlist:' + this.config.classes_known
-        );
+      this.config.debug && Log.log('Adding ' + name + ' to classlist:' + this.config.classes_known);
       // add the specific classes for this new known user
       newClasses.push(name.toLowerCase());
       thisUserClasses = newClasses;
@@ -189,23 +172,14 @@ Module.register('MMM-Face-Reco-DNN', {
       // We get unknown from Face-Reco and then it should be translated to stranger
       if (person === 'unknown') {
         person = this.translate('stranger');
-        welcomeMessage = this.translate('unknownlogin').replace(
-          '%person',
-          person
-        );
+        welcomeMessage = this.translate('unknownlogin').replace('%person', person);
       } else {
         // set up the slightly different message for a known person, attempt to find a Name mapping for display purposes
         var personDisplayName = person;
-        if (
-          this.config.usernameDisplayMapping &&
-          this.config.usernameDisplayMapping[person]
-        ) {
+        if (this.config.usernameDisplayMapping && this.config.usernameDisplayMapping[person]) {
           personDisplayName = this.config.usernameDisplayMapping[person];
         }
-        welcomeMessage = this.translate('knownlogin').replace(
-          '%person',
-          personDisplayName
-        );
+        welcomeMessage = this.translate('knownlogin').replace('%person', personDisplayName);
       }
 
       this.sendNotification('SHOW_ALERT', {
@@ -253,26 +227,17 @@ Module.register('MMM-Face-Reco-DNN', {
           // this is the transition from the unknown state to the noface state
 
           // we want to show the new classes allowed by this target state (noface state)
-          this.show_modules(
-            this.config.classes_noface,
-            this.config.classes_unknown
-          );
+          this.show_modules(this.config.classes_noface, this.config.classes_unknown);
 
           // we want to hide the old classes from the previous state (unknown state)
-          this.hide_modules(
-            this.config.classes_unknown,
-            this.config.classes_noface
-          );
+          this.hide_modules(this.config.classes_unknown, this.config.classes_noface);
         } else {
           // this is the transition from the known state to the noface state
 
           // we want to show the new classes allowed by this target state (noface state)
           // copy the config classes to a new array
           var oldClasses = this.config.classes_known.slice();
-          this.config.debug &&
-            Log.log(
-              'Adding ' + name + ' to classlist: ' + this.config.classes_known
-            );
+          this.config.debug && Log.log('Adding ' + name + ' to classlist: ' + this.config.classes_known);
           oldClasses.push(name.toLowerCase());
 
           // we want to show the new classes allowed by this target state (noface state)
@@ -298,18 +263,12 @@ Module.register('MMM-Face-Reco-DNN', {
         this.config.debug && Log.log('Returned Remaining List of Classes');
         this.config.debug && Log.log(remainingClasses);
 
-        this.config.debug &&
-          Log.log('Hide:' + shownClasses + ' except:' + remainingClasses);
+        this.config.debug && Log.log('Hide:' + shownClasses + ' except:' + remainingClasses);
         this.hide_modules(shownClasses, remainingClasses);
       }
     } else {
       // not how we get to here, but we do. It should be stopped in the socketNotificationReceived function but somehow either something else calls this function or that code does not work
-      this.config.debug &&
-        Log.log(
-          'Detected a logout_user call for ' +
-            name +
-            ' but they were not logged in.'
-        );
+      this.config.debug && Log.log('Detected a logout_user call for ' + name + ' but they were not logged in.');
     }
   },
 
@@ -328,7 +287,7 @@ Module.register('MMM-Face-Reco-DNN', {
 
     Object.values(userClasses).forEach(function (classes) {
       // classes is an array of classes for a user
-      classes.forEach((val) => (classList[val] = 1));
+      classes.forEach(val => (classList[val] = 1));
     });
 
     // classList should now have a unique list of the classes as properties
@@ -343,13 +302,7 @@ Module.register('MMM-Face-Reco-DNN', {
   show_modules: function (showClasses, exceptClasses) {
     // show modules with "showClasses" except for those with "exceptClasses"
     var self = this;
-    this.config.debug &&
-      Log.log(
-        'Showing all new classes:' +
-          showClasses +
-          ', except old classes:' +
-          exceptClasses
-      );
+    this.config.debug && Log.log('Showing all new classes:' + showClasses + ', except old classes:' + exceptClasses);
     MM.getModules()
       .withClass(showClasses)
       .exceptWithClass(exceptClasses)
@@ -361,7 +314,7 @@ Module.register('MMM-Face-Reco-DNN', {
           },
           {
             lockString: self.identifier,
-          }
+          },
         );
       });
   },
@@ -372,8 +325,7 @@ Module.register('MMM-Face-Reco-DNN', {
     // there must be a fancier javascript way to do this if with just runs that same getModules code but with different collections of selectors
     // look to fix this later
     if (hideClasses === 0) {
-      this.config.debug &&
-        Log.log('Hiding all classes except new classes:' + exceptClasses);
+      this.config.debug && Log.log('Hiding all classes except new classes:' + exceptClasses);
       MM.getModules()
         .exceptWithClass(exceptClasses)
         .enumerate(function (module) {
@@ -384,7 +336,7 @@ Module.register('MMM-Face-Reco-DNN', {
             },
             {
               lockString: self.identifier,
-            }
+            },
           );
         });
     } else if (exceptClasses === 0) {
@@ -399,17 +351,11 @@ Module.register('MMM-Face-Reco-DNN', {
             },
             {
               lockString: self.identifier,
-            }
+            },
           );
         });
     } else {
-      this.config.debug &&
-        Log.log(
-          'Hiding all old classes:' +
-            hideClasses +
-            ', except new classes:' +
-            exceptClasses
-        );
+      this.config.debug && Log.log('Hiding all old classes:' + hideClasses + ', except new classes:' + exceptClasses);
       MM.getModules()
         .withClass(hideClasses)
         .exceptWithClass(exceptClasses)
@@ -421,7 +367,7 @@ Module.register('MMM-Face-Reco-DNN', {
             },
             {
               lockString: self.identifier,
-            }
+            },
           );
         });
     }
@@ -437,17 +383,8 @@ Module.register('MMM-Face-Reco-DNN', {
       for (user of payload.users) {
         if (user != null) {
           // if there are currently no users logged in OR we allow multiple users
-          this.config.debug &&
-            Log.log(
-              'Number of logged in users:' +
-                this.users.length +
-                ', Allowed Number of Users:' +
-                this.config.multiUser
-            );
-          if (
-            this.users.length === 0 ||
-            this.users.length < this.config.multiUser
-          ) {
+          this.config.debug && Log.log('Number of logged in users:' + this.users.length + ', Allowed Number of Users:' + this.config.multiUser);
+          if (this.users.length === 0 || this.users.length < this.config.multiUser) {
             // check if the user is already logged in
             if (!this.users.includes(user)) {
               // run the login procedure
@@ -460,13 +397,7 @@ Module.register('MMM-Face-Reco-DNN', {
           } else {
             this.config.debug &&
               Log.log(
-                'Detected a login event for ' +
-                  user +
-                  ' but multiple concurrent logins is limited to ' +
-                  this.config.multiUser +
-                  ' and ' +
-                  this.users +
-                  ' is already logged in.'
+                'Detected a login event for ' + user + ' but multiple concurrent logins is limited to ' + this.config.multiUser + ' and ' + this.users + ' is already logged in.',
               );
           }
 
@@ -493,14 +424,7 @@ Module.register('MMM-Face-Reco-DNN', {
         if (user != null) {
           // see if user is even logged in, since you can only log out if you are actually logged in
           if (this.users.includes(user)) {
-            this.config.debug &&
-              Log.log(
-                'Setting logout timer for ' +
-                  user +
-                  ' for ' +
-                  this.config.logoutDelay +
-                  'ms'
-              );
+            this.config.debug && Log.log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
             this.timouts[user] = setTimeout(function () {
               // Broadcast notificaiton that we are about to hide modules.
               // Ideally this would be USERS_LOGOUT to be consistent with hide/show timer, but to prevent regression using a new type.
@@ -509,12 +433,7 @@ Module.register('MMM-Face-Reco-DNN', {
               logoutCount++;
             }, this.config.logoutDelay);
           } else {
-            this.config.debug &&
-              Log.log(
-                'Detected a logout event for ' +
-                  user +
-                  ' but they were not logged in.'
-              );
+            this.config.debug && Log.log('Detected a logout event for ' + user + ' but they were not logged in.');
           }
         }
       }

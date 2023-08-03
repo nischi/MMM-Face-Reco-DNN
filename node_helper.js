@@ -6,12 +6,12 @@
  */
 
 'use strict';
-const NodeHelper = require('node_helper');
-const { PythonShell } = require('python-shell');
-const onExit = require('signal-exit');
+import { create } from 'node_helper';
+import { PythonShell } from 'python-shell';
+import onExit from 'signal-exit';
 var pythonStarted = false;
 
-module.exports = NodeHelper.create({
+export default create({
   pyshell: null,
   python_start: function () {
     const self = this;
@@ -49,12 +49,12 @@ module.exports = NodeHelper.create({
     // check if a message of the python script is comming in
     self.pyshell.on('message', function (message) {
       // A status message has received and will log
-      if (message.hasOwnProperty('status')) {
+      if (Object.prototype.hasOwnProperty.call(message, 'status')) {
         console.log('[' + self.name + '] ' + message.status);
       }
 
       // Somebody new are in front of the camera, send it back to the Magic Mirror Module
-      if (message.hasOwnProperty('login')) {
+      if (Object.prototype.hasOwnProperty.call(message, 'login')) {
         console.log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
         self.sendSocketNotification('user', {
           action: 'login',
@@ -63,7 +63,7 @@ module.exports = NodeHelper.create({
       }
 
       // Somebody left the camera, send it back to the Magic Mirror Module
-      if (message.hasOwnProperty('logout')) {
+      if (Object.prototype.hasOwnProperty.call(message, 'logout')) {
         console.log('[' + self.name + '] ' + 'Users ' + message.logout.names.join(' - ') + ' logged out.');
         self.sendSocketNotification('user', {
           action: 'logout',
@@ -78,7 +78,7 @@ module.exports = NodeHelper.create({
       console.log('[' + self.name + '] ' + 'finished running...');
     });
 
-    onExit(function (code, signal) {
+    onExit(function (_code, _signal) {
       self.destroy();
     });
   },

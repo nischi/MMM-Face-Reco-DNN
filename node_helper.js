@@ -6,9 +6,10 @@
  */
 
 'use strict';
+// eslint-disable-next-line import/no-unresolved
 import { create } from 'node_helper';
 import { PythonShell } from 'python-shell';
-import onExit from 'signal-exit';
+import { onExit } from 'signal-exit';
 var pythonStarted = false;
 
 export default create({

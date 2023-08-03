@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "eslint .",
     "prettier": "prettier --write **/*.js",
-    "black": "pipenv run black **/*.py"
+    "black": "pipenv run black **/*.py",
+    "encode": "pipenv run python3 tools/encode.py --dataset dataset --encodings tools/encodings.pickle",
+    "postinstall": "pipenv install"
   },
   "repository": {
     "type": "git",

@@ -4,6 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+dlib = "*"
+face-recognition = "*"
+imutils = "*"
+numpy = "*"
+opencv-python = "*"
 
 [dev-packages]
 black = "*"

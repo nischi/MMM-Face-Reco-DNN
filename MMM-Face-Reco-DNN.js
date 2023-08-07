@@ -5,9 +5,9 @@
  * MIT Licensed.
  */
 
+/*global log*/
+
 'use strict';
-// eslint-disable-next-line import/no-unresolved
-import { log } from 'logger';
 
 // eslint-disable-next-line no-undef
 Module.register('MMM-Face-Reco-DNN', {

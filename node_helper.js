@@ -5,14 +5,16 @@
  * MIT Licensed.
  */
 
+/*global require, module, log*/
+
 'use strict';
-// eslint-disable-next-line import/no-unresolved
-import { create } from 'node_helper';
-import { PythonShell } from 'python-shell';
-import { onExit } from 'signal-exit';
+
+const NodeHelper = require('node_helper');
+const { PythonShell } = require('python-shell');
+const onExit = require('signal-exit');
 var pythonStarted = false;
 
-export default create({
+module.exports = NodeHelper.create({
   pyshell: null,
   python_start: function () {
     const self = this;
@@ -45,18 +47,18 @@ export default create({
     }
 
     // Start face reco script
-    self.pyshell = new PythonShell('modules/' + this.name + '/tools/facerecognition.py', options);
+    self.pyshell = new PythonShell('modules/' + this.name + '/tools/recognition.py', options);
 
     // check if a message of the python script is comming in
     self.pyshell.on('message', function (message) {
       // A status message has received and will log
       if (Object.prototype.hasOwnProperty.call(message, 'status')) {
-        console.log('[' + self.name + '] ' + message.status);
+        log('[' + self.name + '] ' + message.status);
       }
 
       // Somebody new are in front of the camera, send it back to the Magic Mirror Module
       if (Object.prototype.hasOwnProperty.call(message, 'login')) {
-        console.log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
+        log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
         self.sendSocketNotification('user', {
           action: 'login',
           users: message.login.names,
@@ -65,7 +67,7 @@ export default create({
 
       // Somebody left the camera, send it back to the Magic Mirror Module
       if (Object.prototype.hasOwnProperty.call(message, 'logout')) {
-        console.log('[' + self.name + '] ' + 'Users ' + message.logout.names.join(' - ') + ' logged out.');
+        log('[' + self.name + '] ' + 'Users ' + message.logout.names.join(' - ') + ' logged out.');
         self.sendSocketNotification('user', {
           action: 'logout',
           users: message.logout.names,
@@ -76,7 +78,7 @@ export default create({
     // Shutdown node helper
     self.pyshell.end(function (err) {
       if (err) throw err;
-      console.log('[' + self.name + '] ' + 'finished running...');
+      log('[' + self.name + '] ' + 'finished running...');
     });
 
     onExit(function (_code, _signal) {
@@ -89,7 +91,7 @@ export default create({
   },
 
   destroy: function () {
-    console.log('[' + this.name + '] ' + 'Terminate python');
+    log('[' + this.name + '] ' + 'Terminate python');
     this.pyshell.childProcess.kill();
   },
 

@@ -10,6 +10,7 @@
     "sourceType": "module"
   },
   "rules": {
+    "complexity": ["error", 27],
     "no-unused-vars": [
       "error",
       {

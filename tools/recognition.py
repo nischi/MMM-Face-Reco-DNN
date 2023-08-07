@@ -1,5 +1,5 @@
 # USAGE
-# python pi_face_recognition.py --cascade haarcascade_frontalface_default.xml --encodings encodings.pickle
+# python recognition.py --cascade haarcascade_frontalface_default.xml --encodings encodings.pickle
 
 # import the necessary packages
 from imutils.video import FPS, VideoStream
@@ -51,7 +51,7 @@ ap.add_argument(
     "--cascade",
     type=str,
     required=False,
-    default="haarcascade_frontalface_default.xml",
+    default="../model/haarcascade_frontalface_default.xml",
     help="path to where the face cascade resides",
 )
 ap.add_argument(
@@ -59,7 +59,7 @@ ap.add_argument(
     "--encodings",
     type=str,
     required=False,
-    default="encodings.pickle",
+    default="../model/encodings.pickle",
     help="path to serialized db of facial encodings",
 )
 ap.add_argument(
@@ -160,11 +160,7 @@ detector = cv2.CascadeClassifier(args["cascade"])
 # initialize the video stream and allow the camera sensor to warm up
 printjson("status", "starting video stream...")
 
-if args["source"].isdigit():
-    src = int(args["source"])
-else:
-    src = args["source"]
-
+src = int(args["source"])
 resolution = args["resolution"].split(",")
 resolution = (int(resolution[0]), int(resolution[1]))
 processWidth = args["processWidth"]
@@ -202,6 +198,12 @@ while True:
     originalFrame = vs.read()
     originalFrame = adjust_brightness_contrast(
         originalFrame, contrast=args["contrast"], brightness=args["brightness"]
+    )
+
+    unknownPath = os.path.dirname(args["dataset"] + "unknown/")
+    cv2.imwrite(
+        unknownPath + "/test.jpg",
+        originalFrame,
     )
 
     if processWidth != resolution[0]:

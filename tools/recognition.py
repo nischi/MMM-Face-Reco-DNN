@@ -2,12 +2,10 @@
 # python recognition.py --cascade haarcascade_frontalface_default.xml --encodings encodings.pickle
 
 # import the necessary packages
-from imutils.video import FPS, VideoStream
-from datetime import datetime
-from imutils import adjust_brightness_contrast
-import face_recognition
-import argparse
 import imutils
+import face_recognition
+import datetime
+import argparse
 import pickle
 import time
 import cv2
@@ -15,7 +13,8 @@ import json
 import sys
 import signal
 import os
-import numpy as np
+import numpy
+from imutils.video import FPS, VideoStream
 
 
 # To properly pass JSON.stringify()ed bool command line parameters, e.g. "--extendDataset"
@@ -196,7 +195,7 @@ while True:
     # grab the frame from the threaded video stream and resize it
     # to 500px (to speedup processing)
     originalFrame = vs.read()
-    originalFrame = adjust_brightness_contrast(
+    originalFrame = imutils.adjust_brightness_contrast(
         originalFrame, contrast=args["contrast"], brightness=args["brightness"]
     )
 
@@ -254,7 +253,7 @@ while True:
 
         # save the name if the distance is below the tolerance
         if minDistance < tolerance:
-            idx = np.where(distances == minDistance)[0][0]
+            idx = numpy.where(distances == minDistance)[0][0]
             name = data["names"][idx]
         else:
             name = "unknown"

@@ -14,4 +14,4 @@ dlib = "==19.24.2"
 black = "*"
 
 [requires]
-python_version = "3.11"
+python_version = "3"

@@ -1,38 +1,14 @@
-# USAGE
-# python recognition.py --cascade haarcascade_frontalface_default.xml --encodings encodings.pickle
-
-# import the necessary packages
-import imutils
 import face_recognition
-import datetime
-import argparse
 import pickle
 import time
 import cv2
-import json
-import sys
 import signal
 import os
 import numpy
-from imutils.video import FPS, VideoStream
-
-
-# To properly pass JSON.stringify()ed bool command line parameters, e.g. "--extendDataset"
-# See: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
-def str2bool(v):
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ("yes", "true", "t", "y", "1"):
-        return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
-
-
-def printjson(type, message):
-    print(json.dumps({type: message}))
-    sys.stdout.flush()
+from datetime import datetime
+from utils.image import Image
+from utils.arguments import Arguments
+from utils.print import Print
 
 
 def signalHandler(signal, frame):
@@ -43,181 +19,70 @@ def signalHandler(signal, frame):
 signal.signal(signal.SIGINT, signalHandler)
 closeSafe = False
 
-# construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument(
-    "-c",
-    "--cascade",
-    type=str,
-    required=False,
-    default="../model/haarcascade_frontalface_default.xml",
-    help="path to where the face cascade resides",
-)
-ap.add_argument(
-    "-e",
-    "--encodings",
-    type=str,
-    required=False,
-    default="../model/encodings.pickle",
-    help="path to serialized db of facial encodings",
-)
-ap.add_argument(
-    "-p",
-    "--usePiCamera",
-    type=int,
-    required=False,
-    default=1,
-    help="Is using picamera or builtin/usb cam",
-)
-ap.add_argument(
-    "-s",
-    "--source",
-    required=False,
-    default=0,
-    help="Use 0 for /dev/video0 or 'http://link.to/stream'",
-)
-ap.add_argument(
-    "-r", "--rotateCamera", type=int, required=False, default=0, help="rotate camera"
-)
-ap.add_argument(
-    "-m",
-    "--method",
-    type=str,
-    required=False,
-    default="dnn",
-    help="method to detect faces (dnn, haar)",
-)
-ap.add_argument(
-    "-d",
-    "--detectionMethod",
-    type=str,
-    required=False,
-    default="hog",
-    help="face detection model to use: either `hog` or `cnn`",
-)
-ap.add_argument(
-    "-i",
-    "--interval",
-    type=int,
-    required=False,
-    default=2000,
-    help="interval between recognitions",
-)
-ap.add_argument(
-    "-o", "--output", type=int, required=False, default=1, help="Show output"
-)
-ap.add_argument(
-    "-eds",
-    "--extendDataset",
-    type=str2bool,
-    required=False,
-    default=False,
-    help="Extend Dataset with unknown pictures",
-)
-ap.add_argument(
-    "-ds",
-    "--dataset",
-    required=False,
-    default="../dataset/",
-    help="path to input directory of faces + images",
-)
-ap.add_argument(
-    "-t",
-    "--tolerance",
-    type=float,
-    required=False,
-    default=0.6,
-    help="How much distance between faces to consider it a match. Lower is more strict.",
-)
-ap.add_argument(
-    "-br",
-    "--brightness",
-    default=0,
-    help="Brightness, negative is darker, positive is brighter",
-)
-ap.add_argument(
-    "-co", "--contrast", default=0, help="Contrast, positive value for more contrast"
-)
-ap.add_argument(
-    "-res", "--resolution", default="1920,1080", help="Resolution of the image"
-)
-ap.add_argument(
-    "-pw",
-    "--processWidth",
-    type=int,
-    default=500,
-    help="Resolution of the image which will be processed from OpenCV",
-)
-args = vars(ap.parse_args())
+# prepare console arguments
+Arguments.prepareArguments()
 
 # load the known faces and embeddings along with OpenCV's Haar
 # cascade for face detection
-printjson("status", "loading encodings + face detector...")
-data = pickle.loads(open(args["encodings"], "rb").read())
-detector = cv2.CascadeClassifier(args["cascade"])
+Print.printJson("status", "loading encodings + face detector...")
+data = pickle.loads(open(Arguments.get("encodings"), "rb").read())
+detector = cv2.CascadeClassifier(Arguments.get("cascade"))
 
-# initialize the video stream and allow the camera sensor to warm up
-printjson("status", "starting video stream...")
-
-src = int(args["source"])
-resolution = args["resolution"].split(",")
+# initialize the video stream
+Print.printJson("status", "starting video stream...")
+src = int(Arguments.get("source"))
+processWidth = Arguments.get("processWidth")
+resolution = Arguments.get("resolution").split(",")
 resolution = (int(resolution[0]), int(resolution[1]))
-processWidth = args["processWidth"]
-printjson("status", resolution)
-printjson("status", processWidth)
-
-if args["usePiCamera"] >= 1:
-    vs = VideoStream(
-        usePiCamera=True, rotation=args["rotateCamera"], resolution=resolution
-    ).start()
-else:
-    vs = VideoStream(src=src, resolution=resolution).start()
-time.sleep(2.0)
+Print.printJson("status", src)
+Print.printJson("status", resolution)
+Print.printJson("status", processWidth)
+vs = cv2.VideoCapture(src)
+vs.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
+vs.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
 
 # variable for prev names
 prevNames = []
 
 # create unknown path if needed
-if args["extendDataset"] is True:
-    unknownPath = os.path.dirname(args["dataset"] + "unknown/")
+if Arguments.get("extendDataset") is True:
+    unknownPath = os.path.dirname(Arguments.get("dataset") + "unknown/")
     try:
         os.stat(unknownPath)
     except:
         os.mkdir(unknownPath)
 
-tolerance = float(args["tolerance"])
-
-# start the FPS counter
-fps = FPS().start()
+tolerance = float(Arguments.get("tolerance"))
 
 # loop over frames from the video file stream
 while True:
-    # grab the frame from the threaded video stream and resize it
-    # to 500px (to speedup processing)
-    originalFrame = vs.read()
-    originalFrame = imutils.adjust_brightness_contrast(
-        originalFrame, contrast=args["contrast"], brightness=args["brightness"]
+    # read the frame
+    retval, originalFrame = vs.read()
+
+    # adjust image brightness and contrast
+    originalFrame = Image.adjust_brightness_contrast(
+        originalFrame, Arguments.get("brightness"), Arguments.get("contrast")
     )
 
-    unknownPath = os.path.dirname(args["dataset"] + "unknown/")
-    cv2.imwrite(
-        unknownPath + "/test.jpg",
-        originalFrame,
-    )
+    if Arguments.get("rotateCamera") >= 0 and Arguments.get("rotateCamera") <= 2:
+        originalFrame = cv2.rotate(originalFrame, Arguments.get("rotateCamera"))
 
-    if processWidth != resolution[0]:
-        frame = imutils.resize(originalFrame, width=processWidth)
+    # resize image if we wanna process a smaller image
+    if processWidth != resolution[0] and processWidth != 0:
+        frame = Image.resize(originalFrame, width=processWidth)
     else:
         frame = originalFrame
 
-    if args["method"] == "dnn":
+    if Arguments.get("method") == "dnn":
         # load the input image and convert it from BGR (OpenCV ordering)
         # to dlib ordering (RGB)
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         # detect the (x, y)-coordinates of the bounding boxes
         # corresponding to each face in the input image
-        boxes = face_recognition.face_locations(rgb, model=args["detectionMethod"])
-    elif args["method"] == "haar":
+        boxes = face_recognition.face_locations(
+            rgb, model=Arguments.get("detectionMethod")
+        )
+    elif Arguments.get("method") == "haar":
         # convert the input frame from (1) BGR to grayscale (for face
         # detection) and (2) from BGR to RGB (for face recognition)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -272,11 +137,11 @@ while True:
         )
 
     # display the image to our screen
-    if args["output"] == 1:
+    if Arguments.get("output") == 1:
         cv2.imshow("Frame", frame)
 
     # update the FPS counter
-    fps.update()
+    # fps.update()
 
     logins = []
     logouts = []
@@ -286,9 +151,9 @@ while True:
             logins.append(n)
 
             # if extendDataset is active we need to save the picture
-            if args["extendDataset"] is True:
+            if Arguments.get("extendDataset") is True:
                 # set correct path to the dataset
-                path = os.path.dirname(args["dataset"] + "/" + n + "/")
+                path = os.path.dirname(Arguments.get("dataset") + "/" + n + "/")
 
                 today = datetime.now()
                 cv2.imwrite(
@@ -301,10 +166,10 @@ while True:
 
     # send inforrmation to prompt, only if something has changes
     if logins.__len__() > 0:
-        printjson("login", {"names": logins})
+        Print.printJson("login", {"names": logins})
 
     if logouts.__len__() > 0:
-        printjson("logout", {"names": logouts})
+        Print.printJson("logout", {"names": logouts})
 
     # set this names as new prev names for next iteration
     prevNames = names
@@ -314,13 +179,8 @@ while True:
     if key == ord("q") or closeSafe == True:
         break
 
-    time.sleep(args["interval"] / 1000)
-
-# stop the timer and display FPS information
-fps.stop()
-printjson("status", "elasped time: {:.2f}".format(fps.elapsed()))
-printjson("status", "approx. FPS: {:.2f}".format(fps.fps()))
+    time.sleep(Arguments.get("interval") / 1000)
 
 # do a bit of cleanup
+vs.release()
 cv2.destroyAllWindows()
-vs.stop()

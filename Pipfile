@@ -5,10 +5,9 @@ name = "pypi"
 
 [packages]
 face-recognition = "==1.3.0"
-imutils = "==0.5.4"
 numpy = "==1.25.2"
 opencv-python = "==4.8.0.74"
-dlib = "==19.24.2"
+dlib = "*"
 
 [dev-packages]
 black = "*"

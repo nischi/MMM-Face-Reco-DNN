@@ -28,7 +28,7 @@
     "black": "pipenv run black **/*.py",
     "pipenv-location": "pipenv --venv",
     "encode": "pipenv run python3 tools/encode.py -i dataset -e model/encodings.pickle",
-    "recognition": "pipenv run python3 tools/recognition.py -e model/encodings.pickle -p 0 -c model/haarcascade_frontalface_default.xml -s 0 -i 10",
+    "recognition": "pipenv run python3 tools/recognition.py -e model/encodings.pickle -c model/haarcascade_frontalface_default.xml -s 0 -i 10",
     "postinstall": "pipenv install"
   },
   "dependencies": {

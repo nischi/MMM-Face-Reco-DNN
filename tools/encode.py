@@ -1,13 +1,10 @@
-# USAGE
-# python encode.py --dataset dataset --encodings encodings.pickle
-
 # import the necessary packages
-from imutils import paths
 import face_recognition
 import argparse
 import pickle
 import cv2
 import os
+from utils.image import Image
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -36,7 +33,7 @@ args = vars(ap.parse_args())
 
 # grab the paths to the input images in our dataset
 print("[INFO] quantifying faces...")
-imagePaths = list(paths.list_images(args["dataset"]))
+imagePaths = list(Image.list_images(args["dataset"]))
 
 # initialize the list of known encodings and known names
 knownEncodings = []

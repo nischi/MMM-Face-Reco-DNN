@@ -38,6 +38,7 @@ module.exports = NodeHelper.create({
         '--contrast=' + this.config.contrast,
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
+        '--outputmm=' + this.config.outputmm,
       ],
     };
 
@@ -56,6 +57,13 @@ module.exports = NodeHelper.create({
       }
 
       // Somebody new are in front of the camera, send it back to the Magic Mirror Module
+      if (Object.prototype.hasOwnProperty.call(message, 'camera_image')) {
+        self.sendSocketNotification('camera_image', {
+          image: message.camera_image.image,
+        });
+      }
+
+      // Check if we get an image to show in the mirror
       if (Object.prototype.hasOwnProperty.call(message, 'login')) {
         console.log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
         self.sendSocketNotification('user', {

@@ -5,6 +5,7 @@ import cv2
 import signal
 import os
 import numpy
+import base64
 from datetime import datetime
 from utils.image import Image
 from utils.arguments import Arguments
@@ -139,6 +140,11 @@ while True:
     # display the image to our screen
     if Arguments.get("output") == 1:
         cv2.imshow("Frame", frame)
+
+    if Arguments.get("outputmm") == 1:
+        retval, buffer = cv2.imencode('.jpg', frame)
+        jpg_as_text = base64.b64encode(buffer).decode()
+        Print.printJson("camera_image", {"image": jpg_as_text})
 
     # update the FPS counter
     # fps.update()

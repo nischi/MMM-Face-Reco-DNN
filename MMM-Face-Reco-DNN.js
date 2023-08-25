@@ -69,6 +69,8 @@ Module.register('MMM-Face-Reco-DNN', {
     resolution: [1280, 960],
     // width of the image for processing
     processWidth: 500,
+    // output image on mm
+    outputmm: 0,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
   },
@@ -76,6 +78,7 @@ Module.register('MMM-Face-Reco-DNN', {
   timouts: {},
   users: [],
   userClasses: [],
+  image: '',
 
   // ----------------------------------------------------------------------------------------------------
   start: function () {
@@ -372,9 +375,14 @@ Module.register('MMM-Face-Reco-DNN', {
     }
   },
   // ----------------------------------------------------------------------------------------------------
-  socketNotificationReceived: function (_notification, payload) {
+  socketNotificationReceived: function (notification, payload) {
     var self = this;
     var user;
+
+    if (notification === 'camera_image') {
+      this.image = payload.image;
+      this.updateDom(this.config.animationSpeed);
+    }
 
     // somebody has logged in
     if (payload.action === 'login') {
@@ -445,7 +453,7 @@ Module.register('MMM-Face-Reco-DNN', {
   },
 
   // ----------------------------------------------------------------------------------------------------
-  notificationReceived: function (notification, _payload, _sender) {
+  notificationReceived: function (notification, payload, _sender) {
     // Event if DOM is created
     if (notification === 'DOM_OBJECTS_CREATED') {
       // at startup modules will already be shown
@@ -461,4 +469,16 @@ Module.register('MMM-Face-Reco-DNN', {
       this.sendNotification('LOGGED_IN_USERS', this.users);
     }
   },
+
+	getDom: function() {
+    const wrapperEl = document.createElement("div");
+		wrapperEl.classList.add('face-recognition');
+
+    const imageEl  = document.createElement("img");
+    imageEl.classList.add('face-recognition-image');
+    imageEl.src = 'data:image/jpg;base64,' + this.image;
+    wrapperEl.appendChild(imageEl);
+
+		return wrapperEl;
+	},
 });

@@ -58,7 +58,7 @@ tolerance = float(Arguments.get("tolerance"))
 while True:
     # read the frame
     retval, originalFrame = vs.read()
-
+    
     # adjust image brightness and contrast
     originalFrame = Image.adjust_brightness_contrast(
         originalFrame, Arguments.get("brightness"), Arguments.get("contrast")

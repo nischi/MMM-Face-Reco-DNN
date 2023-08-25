@@ -1,39 +1,17 @@
 # import the necessary packages
 import face_recognition
-import argparse
 import pickle
 import cv2
 import os
 from utils.image import Image
+from utils.arguments import Arguments
 
 # construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument(
-    "-i",
-    "--dataset",
-    required=False,
-    default="../dataset/",
-    help="path to input directory of faces + images",
-)
-ap.add_argument(
-    "-e",
-    "--encodings",
-    required=False,
-    default="../model/encodings.pickle",
-    help="path to serialized db of facial encodings",
-)
-ap.add_argument(
-    "-d",
-    "--detection-method",
-    type=str,
-    default="hog",
-    help="face detection model to use: either `hog` or `cnn`",
-)
-args = vars(ap.parse_args())
+Arguments.prepareEncodingArguments()
 
 # grab the paths to the input images in our dataset
 print("[INFO] quantifying faces...")
-imagePaths = list(Image.list_images(args["dataset"]))
+imagePaths = list(Image.list_images(Arguments.get("dataset")))
 
 # initialize the list of known encodings and known names
 knownEncodings = []
@@ -54,7 +32,9 @@ for i, imagePath in enumerate(imagePaths):
 
     # detect the (x, y)-coordinates of the bounding boxes
     # corresponding to each face in the input image
-    boxes = face_recognition.face_locations(rgb, model=args["detection_method"])
+    boxes = face_recognition.face_locations(
+        rgb, model=Arguments.get("detection_method")
+    )
 
     # compute the facial embedding for the face
     encodings = face_recognition.face_encodings(rgb, boxes)
@@ -69,6 +49,6 @@ for i, imagePath in enumerate(imagePaths):
 # dump the facial encodings + names to disk
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
-f = open(args["encodings"], "wb")
+f = open(Arguments.get("encodings"), "wb")
 f.write(pickle.dumps(data))
 f.close()

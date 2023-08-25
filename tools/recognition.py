@@ -20,7 +20,7 @@ signal.signal(signal.SIGINT, signalHandler)
 closeSafe = False
 
 # prepare console arguments
-Arguments.prepareArguments()
+Arguments.prepareRecognitionArguments()
 
 # load the known faces and embeddings along with OpenCV's Haar
 # cascade for face detection

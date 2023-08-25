@@ -8,7 +8,33 @@ class Arguments:
     def get(name):
         return Arguments.args[name]
 
-    def prepareArguments():
+    def prepareEncodingArguments():
+        ap = argparse.ArgumentParser()
+        ap.add_argument(
+            "-i",
+            "--dataset",
+            required=False,
+            default="../dataset/",
+            help="path to input directory of faces + images",
+        )
+        ap.add_argument(
+            "-e",
+            "--encodings",
+            required=False,
+            default="../model/encodings.pickle",
+            help="path to serialized db of facial encodings",
+        )
+        ap.add_argument(
+            "-d",
+            "--detection-method",
+            type=str,
+            default="hog",
+            help="face detection model to use: either `hog` or `cnn`",
+        )
+
+        Arguments.args = vars(ap.parse_args())
+
+    def prepareRecognitionArguments():
         ap = argparse.ArgumentParser()
         ap.add_argument(
             "-c",

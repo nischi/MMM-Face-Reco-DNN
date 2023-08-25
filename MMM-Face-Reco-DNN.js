@@ -33,8 +33,6 @@ Module.register('MMM-Face-Reco-DNN', {
     cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
     encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
-    // You wanna use pi camera or usb / builtin (1 = raspi camera, 0 = other camera)
-    usePiCamera: 1,
     // Brightness, negative is darker, positive is brighter
     brightness: 0,
     // if you don't use the pi camera, which stream do you want to use
@@ -82,9 +80,9 @@ Module.register('MMM-Face-Reco-DNN', {
   // ----------------------------------------------------------------------------------------------------
   start: function () {
     this.sendSocketNotification('CONFIG', this.config);
-    log('Starting module: ' + this.name);
+    Log.log('Starting module: ' + this.name);
 
-    this.config.debug && log(this.config);
+    this.config.debug && Log.log(this.config);
 
     // there are 3 states (noface, unknown face, known face). Each of these has classes that allow them
     // this configuration defines which classes provide which states
@@ -118,11 +116,11 @@ Module.register('MMM-Face-Reco-DNN', {
     var existingClasses;
     var newClassList;
 
-    this.config.debug && log('User list before login:' + this.users);
-    log('Logged in user:' + name);
+    this.config.debug && Log.log('User list before login:' + this.users);
+    Log.log('Logged in user:' + name);
     // user not currently logged in so add them to the list of logged in users
     this.users.push(name);
-    this.config.debug && log('User list after login:' + this.users);
+    this.config.debug && Log.log('User list after login:' + this.users);
 
     if (this.users.length === 1) {
       // this is the login of the first user
@@ -133,8 +131,8 @@ Module.register('MMM-Face-Reco-DNN', {
       existingClasses = this.get_class_set(this.userClasses);
     }
 
-    this.config.debug && log('User Classes Before Login');
-    this.config.debug && log(existingClasses);
+    this.config.debug && Log.log('User Classes Before Login');
+    this.config.debug && Log.log(existingClasses);
 
     // what we do here depends on if we recognise the user or not
     if (name === 'unknown') {
@@ -146,7 +144,7 @@ Module.register('MMM-Face-Reco-DNN', {
       // we want to show the new classes allowed by this target state (known state)
       // copy the config classes to a new array
       var newClasses = this.config.classes_known.slice();
-      this.config.debug && log('Adding ' + name + ' to classlist:' + this.config.classes_known);
+      this.config.debug && Log.log('Adding ' + name + ' to classlist:' + this.config.classes_known);
       // add the specific classes for this new known user
       newClasses.push(name.toLowerCase());
       thisUserClasses = newClasses;
@@ -154,8 +152,8 @@ Module.register('MMM-Face-Reco-DNN', {
 
     // add the new user's classes to the list of user classes
     this.userClasses[name] = thisUserClasses;
-    this.config.debug && log('User Classes After Login');
-    this.config.debug && log(this.userClasses);
+    this.config.debug && Log.log('User Classes After Login');
+    this.config.debug && Log.log(this.userClasses);
 
     // so the full list of all classes that should be shown is now in userClasses
     newClassList = this.get_class_set(this.userClasses);
@@ -194,8 +192,8 @@ Module.register('MMM-Face-Reco-DNN', {
 
   // ----------------------------------------------------------------------------------------------------
   logout_user: function (name) {
-    this.config.debug && log('User list before logout:' + this.users);
-    log('Logged out user:' + name);
+    this.config.debug && Log.log('User list before logout:' + this.users);
+    Log.log('Logged out user:' + name);
 
     // just double check the the user we are logging out is actually logged in
     if (this.users.includes(name)) {
@@ -206,12 +204,12 @@ Module.register('MMM-Face-Reco-DNN', {
         return u !== name;
       });
 
-      this.config.debug && log('User list after logout:' + this.users);
+      this.config.debug && Log.log('User list after logout:' + this.users);
 
       // remove the users property from the list of classes
       // copy the class list to another array before deleting the logging out user
-      this.config.debug && log('User Classes Before Logout');
-      this.config.debug && log(this.userClasses);
+      this.config.debug && Log.log('User Classes Before Logout');
+      this.config.debug && Log.log(this.userClasses);
       var oldUserClasses = Object.assign({}, this.userClasses); // assign works doing a shallow copy because the object is simply enough
 
       // delete the user from the list of user classes
@@ -237,7 +235,7 @@ Module.register('MMM-Face-Reco-DNN', {
           // we want to show the new classes allowed by this target state (noface state)
           // copy the config classes to a new array
           var oldClasses = this.config.classes_known.slice();
-          this.config.debug && log('Adding ' + name + ' to classlist: ' + this.config.classes_known);
+          this.config.debug && Log.log('Adding ' + name + ' to classlist: ' + this.config.classes_known);
           oldClasses.push(name.toLowerCase());
 
           // we want to show the new classes allowed by this target state (noface state)
@@ -250,25 +248,25 @@ Module.register('MMM-Face-Reco-DNN', {
         // in this transition we go from multiple users to a lower number of users, leaving one or more logged in
         // to do this properly you have to go through all the remaining users and work out what classes would be left after we remove this one user
 
-        this.config.debug && log('User Classes Remaining');
-        this.config.debug && log(this.userClasses);
+        this.config.debug && Log.log('User Classes Remaining');
+        this.config.debug && Log.log(this.userClasses);
 
         // build shownClasses to be the list of classes that are showing now
         var shownClasses = this.get_class_set(oldUserClasses);
-        this.config.debug && log('Returned Showing List of Classes');
-        this.config.debug && log(shownClasses);
+        this.config.debug && Log.log('Returned Showing List of Classes');
+        this.config.debug && Log.log(shownClasses);
 
         // build remainingClasses to be the list of classes that still should be shown
         var remainingClasses = this.get_class_set(this.userClasses);
-        this.config.debug && log('Returned Remaining List of Classes');
-        this.config.debug && log(remainingClasses);
+        this.config.debug && Log.log('Returned Remaining List of Classes');
+        this.config.debug && Log.log(remainingClasses);
 
-        this.config.debug && log('Hide:' + shownClasses + ' except:' + remainingClasses);
+        this.config.debug && Log.log('Hide:' + shownClasses + ' except:' + remainingClasses);
         this.hide_modules(shownClasses, remainingClasses);
       }
     } else {
       // not how we get to here, but we do. It should be stopped in the socketNotificationReceived function but somehow either something else calls this function or that code does not work
-      this.config.debug && log('Detected a logout_user call for ' + name + ' but they were not logged in.');
+      this.config.debug && Log.log('Detected a logout_user call for ' + name + ' but they were not logged in.');
     }
   },
 
@@ -299,7 +297,7 @@ Module.register('MMM-Face-Reco-DNN', {
   show_modules: function (showClasses, exceptClasses) {
     // show modules with "showClasses" except for those with "exceptClasses"
     var self = this;
-    this.config.debug && log('Showing all new classes:' + showClasses + ', except old classes:' + exceptClasses);
+    this.config.debug && Log.log('Showing all new classes:' + showClasses + ', except old classes:' + exceptClasses);
     // eslint-disable-next-line no-undef
     MM.getModules()
       .withClass(showClasses)
@@ -308,7 +306,7 @@ Module.register('MMM-Face-Reco-DNN', {
         module.show(
           self.config.animationSpeed,
           function () {
-            log(module.name + ' is shown.');
+            Log.log(module.name + ' is shown.');
           },
           {
             lockString: self.identifier,
@@ -323,7 +321,7 @@ Module.register('MMM-Face-Reco-DNN', {
     // there must be a fancier javascript way to do this if with just runs that same getModules code but with different collections of selectors
     // look to fix this later
     if (hideClasses === 0) {
-      this.config.debug && log('Hiding all classes except new classes:' + exceptClasses);
+      this.config.debug && Log.log('Hiding all classes except new classes:' + exceptClasses);
       // eslint-disable-next-line no-undef
       MM.getModules()
         .exceptWithClass(exceptClasses)
@@ -331,7 +329,7 @@ Module.register('MMM-Face-Reco-DNN', {
           module.hide(
             self.config.animationSpeed,
             function () {
-              log(module.name + ' is hidden.');
+              Log.log(module.name + ' is hidden.');
             },
             {
               lockString: self.identifier,
@@ -339,7 +337,7 @@ Module.register('MMM-Face-Reco-DNN', {
           );
         });
     } else if (exceptClasses === 0) {
-      this.config.debug && log('Hiding old classes:' + hideClasses);
+      this.config.debug && Log.log('Hiding old classes:' + hideClasses);
       // eslint-disable-next-line no-undef
       MM.getModules()
         .withClass(hideClasses)
@@ -347,7 +345,7 @@ Module.register('MMM-Face-Reco-DNN', {
           module.hide(
             self.config.animationSpeed,
             function () {
-              log(module.name + ' is hidden.');
+              Log.log(module.name + ' is hidden.');
             },
             {
               lockString: self.identifier,
@@ -355,7 +353,7 @@ Module.register('MMM-Face-Reco-DNN', {
           );
         });
     } else {
-      this.config.debug && log('Hiding all old classes:' + hideClasses + ', except new classes:' + exceptClasses);
+      this.config.debug && Log.log('Hiding all old classes:' + hideClasses + ', except new classes:' + exceptClasses);
       // eslint-disable-next-line no-undef
       MM.getModules()
         .withClass(hideClasses)
@@ -364,7 +362,7 @@ Module.register('MMM-Face-Reco-DNN', {
           module.hide(
             self.config.animationSpeed,
             function () {
-              log(module.name + ' is hidden.');
+              Log.log(module.name + ' is hidden.');
             },
             {
               lockString: self.identifier,
@@ -384,7 +382,7 @@ Module.register('MMM-Face-Reco-DNN', {
       for (user of payload.users) {
         if (user != null) {
           // if there are currently no users logged in OR we allow multiple users
-          this.config.debug && log('Number of logged in users:' + this.users.length + ', Allowed Number of Users:' + this.config.multiUser);
+          this.config.debug && Log.log('Number of logged in users:' + this.users.length + ', Allowed Number of Users:' + this.config.multiUser);
           if (this.users.length === 0 || this.users.length < this.config.multiUser) {
             // check if the user is already logged in
             if (!this.users.includes(user)) {
@@ -393,30 +391,30 @@ Module.register('MMM-Face-Reco-DNN', {
               // increment the counter
               loginCount++;
             } else {
-              this.config.debug && log('Detected ' + user + ' again.');
+              this.config.debug && Log.log('Detected ' + user + ' again.');
             }
           } else {
             this.config.debug &&
-              log(
+              Log.log(
                 'Detected a login event for ' + user + ' but multiple concurrent logins is limited to ' + this.config.multiUser + ' and ' + this.users + ' is already logged in.',
               );
           }
 
           // clear any timeouts the user might have so that they stay logged in
           if (this.timouts[user] != null) {
-            this.config.debug && log('Clearing timeouts for ' + user);
-            this.config.debug && log('Remaining timeouts BEFORE:');
-            this.config.debug && log(this.timouts);
+            this.config.debug && Log.log('Clearing timeouts for ' + user);
+            this.config.debug && Log.log('Remaining timeouts BEFORE:');
+            this.config.debug && Log.log(this.timouts);
             clearTimeout(this.timouts[user]);
-            this.config.debug && log('Remaining timeouts AFTER:');
-            this.config.debug && log(this.timouts);
+            this.config.debug && Log.log('Remaining timeouts AFTER:');
+            this.config.debug && Log.log(this.timouts);
           }
         }
       }
 
       if (loginCount > 0) {
         // We still need to broadcast MM notification for backward compatability.
-        this.config.debug && log('Detected ' + loginCount + ' logins.');
+        this.config.debug && Log.log('Detected ' + loginCount + ' logins.');
         this.sendNotification('USERS_LOGIN', payload.users);
       }
     } else if (payload.action === 'logout') {
@@ -425,7 +423,7 @@ Module.register('MMM-Face-Reco-DNN', {
         if (user != null) {
           // see if user is even logged in, since you can only log out if you are actually logged in
           if (this.users.includes(user)) {
-            this.config.debug && log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
+            this.config.debug && Log.log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
             this.timouts[user] = setTimeout(function () {
               // Broadcast notificaiton that we are about to hide modules.
               // Ideally this would be USERS_LOGOUT to be consistent with hide/show timer, but to prevent regression using a new type.
@@ -434,13 +432,13 @@ Module.register('MMM-Face-Reco-DNN', {
               logoutCount++;
             }, this.config.logoutDelay);
           } else {
-            this.config.debug && log('Detected a logout event for ' + user + ' but they were not logged in.');
+            this.config.debug && Log.log('Detected a logout event for ' + user + ' but they were not logged in.');
           }
         }
       }
 
       if (logoutCount > 0) {
-        this.config.debug && log('Detected ' + logoutCount + ' logouts.');
+        this.config.debug && Log.log('Detected ' + logoutCount + ' logouts.');
         this.sendNotification('USERS_LOGOUT', payload.users);
       }
     }
@@ -459,7 +457,7 @@ Module.register('MMM-Face-Reco-DNN', {
 
     // load logged in users
     if (notification === 'GET_LOGGED_IN_USERS') {
-      log(this.name + ' get logged in users ' + this.users);
+      Log.log(this.name + ' get logged in users ' + this.users);
       this.sendNotification('LOGGED_IN_USERS', this.users);
     }
   },

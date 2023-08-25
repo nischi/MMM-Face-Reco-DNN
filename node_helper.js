@@ -25,7 +25,6 @@ module.exports = NodeHelper.create({
       args: [
         '--cascade=' + this.config.cascade,
         '--encodings=' + this.config.encodings,
-        '--usePiCamera=' + this.config.usePiCamera,
         '--source=' + this.config.source,
         '--rotateCamera=' + this.config.rotateCamera,
         '--method=' + this.config.method,
@@ -53,12 +52,12 @@ module.exports = NodeHelper.create({
     self.pyshell.on('message', function (message) {
       // A status message has received and will log
       if (Object.prototype.hasOwnProperty.call(message, 'status')) {
-        log('[' + self.name + '] ' + message.status);
+        console.log('[' + self.name + '] ' + message.status);
       }
 
       // Somebody new are in front of the camera, send it back to the Magic Mirror Module
       if (Object.prototype.hasOwnProperty.call(message, 'login')) {
-        log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
+        console.log('[' + self.name + '] ' + 'Users ' + message.login.names.join(' - ') + ' logged in.');
         self.sendSocketNotification('user', {
           action: 'login',
           users: message.login.names,
@@ -67,7 +66,7 @@ module.exports = NodeHelper.create({
 
       // Somebody left the camera, send it back to the Magic Mirror Module
       if (Object.prototype.hasOwnProperty.call(message, 'logout')) {
-        log('[' + self.name + '] ' + 'Users ' + message.logout.names.join(' - ') + ' logged out.');
+        console.log('[' + self.name + '] ' + 'Users ' + message.logout.names.join(' - ') + ' logged out.');
         self.sendSocketNotification('user', {
           action: 'logout',
           users: message.logout.names,
@@ -78,7 +77,7 @@ module.exports = NodeHelper.create({
     // Shutdown node helper
     self.pyshell.end(function (err) {
       if (err) throw err;
-      log('[' + self.name + '] ' + 'finished running...');
+      console.log('[' + self.name + '] ' + 'finished running...');
     });
 
     onExit(function (_code, _signal) {
@@ -91,7 +90,7 @@ module.exports = NodeHelper.create({
   },
 
   destroy: function () {
-    log('[' + this.name + '] ' + 'Terminate python');
+    console.log('[' + this.name + '] ' + 'Terminate python');
     this.pyshell.childProcess.kill();
   },
 

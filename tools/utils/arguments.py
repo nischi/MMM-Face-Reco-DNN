@@ -53,13 +53,6 @@ class Arguments:
             help="path to serialized db of facial encodings",
         )
         ap.add_argument(
-            "-s",
-            "--source",
-            required=False,
-            default=0,
-            help="Use 0 for /dev/video0 or 'http://link.to/stream'",
-        )
-        ap.add_argument(
             "-r",
             "--rotateCamera",
             type=int,
@@ -92,7 +85,10 @@ class Arguments:
             help="interval between recognitions",
         )
         ap.add_argument(
-            "-o", "--output", type=int, required=False, default=1, help="Show output"
+            "-o", "--output", type=int, required=False, default=0, help="Show output"
+        )
+        ap.add_argument(
+            "-omm", "--outputmm", type=int, required=False, default=0, help="Show output on magic mirror"
         )
         ap.add_argument(
             "-eds",

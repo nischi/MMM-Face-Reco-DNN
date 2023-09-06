@@ -10,7 +10,7 @@ from datetime import datetime
 from utils.image import Image
 from utils.arguments import Arguments
 from utils.print import Print
-
+from picamera2 import Picamera2
 
 def signalHandler(signal, frame):
     global closeSafe
@@ -31,16 +31,16 @@ detector = cv2.CascadeClassifier(Arguments.get("cascade"))
 
 # initialize the video stream
 Print.printJson("status", "starting video stream...")
-src = int(Arguments.get("source"))
 processWidth = Arguments.get("processWidth")
 resolution = Arguments.get("resolution").split(",")
 resolution = (int(resolution[0]), int(resolution[1]))
-Print.printJson("status", src)
 Print.printJson("status", resolution)
 Print.printJson("status", processWidth)
-vs = cv2.VideoCapture(src)
-vs.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
-vs.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
+
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={"size": (resolution[0], resolution[1])}))
+picam2.start()
+
 
 # variable for prev names
 prevNames = []
@@ -58,7 +58,7 @@ tolerance = float(Arguments.get("tolerance"))
 # loop over frames from the video file stream
 while True:
     # read the frame
-    retval, originalFrame = vs.read()
+    originalFrame = picam2.capture_array()
     
     # adjust image brightness and contrast
     originalFrame = Image.adjust_brightness_contrast(
@@ -188,5 +188,5 @@ while True:
     time.sleep(Arguments.get("interval") / 1000)
 
 # do a bit of cleanup
-vs.release()
+picam2.stop()
 cv2.destroyAllWindows()

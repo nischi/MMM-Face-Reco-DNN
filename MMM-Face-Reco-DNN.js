@@ -35,10 +35,8 @@ Module.register('MMM-Face-Reco-DNN', {
     encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
     // Brightness, negative is darker, positive is brighter
     brightness: 0,
-    // if you don't use the pi camera, which stream do you want to use
-    contrast: 0,
     // Contrast, positive value for more contrast
-    source: 0,
+    contrast: 0,
     // rotate camera?
     rotateCamera: 0,
     // method of face recognition (dnn = deep neural network, haar = haarcascade)

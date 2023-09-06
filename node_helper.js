@@ -25,7 +25,6 @@ module.exports = NodeHelper.create({
       args: [
         '--cascade=' + this.config.cascade,
         '--encodings=' + this.config.encodings,
-        '--source=' + this.config.source,
         '--rotateCamera=' + this.config.rotateCamera,
         '--method=' + this.config.method,
         '--detectionMethod=' + this.config.detectionMethod,

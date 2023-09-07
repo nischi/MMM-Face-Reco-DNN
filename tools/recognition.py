@@ -38,7 +38,7 @@ Print.printJson("status", resolution)
 Print.printJson("status", processWidth)
 
 picam2 = Picamera2()
-picam2.configure(picam2.create_preview_configuration(main={"size": (resolution[0], resolution[1])}))
+picam2.configure(picam2.create_preview_configuration(main={"size": (resolution[0], resolution[1]), "format": "XRGB8888"}))
 picam2.start()
 
 

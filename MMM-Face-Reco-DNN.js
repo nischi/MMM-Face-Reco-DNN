@@ -30,15 +30,15 @@ Module.register('MMM-Face-Reco-DNN', {
     // Set of modules that are always shown - show if there is a face or no face detected
     alwaysClass: 'always',
     // xml to recognize with haarcascae
-    cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
+    cascade: 'modules/MMM-Face-Reco-DNN/model/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
-    encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
+    encodings: 'modules/MMM-Face-Reco-DNN/model/encodings.pickle',
     // Brightness, negative is darker, positive is brighter
     brightness: 0,
     // Contrast, positive value for more contrast
     contrast: 0,
     // rotate camera?
-    rotateCamera: 0,
+    rotateCamera: -1,
     // method of face recognition (dnn = deep neural network, haar = haarcascade)
     method: 'dnn',
     // which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate

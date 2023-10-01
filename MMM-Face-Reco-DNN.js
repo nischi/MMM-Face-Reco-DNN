@@ -33,11 +33,11 @@ Module.register('MMM-Face-Reco-DNN', {
     cascade: 'modules/MMM-Face-Reco-DNN/model/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
     encodings: 'modules/MMM-Face-Reco-DNN/model/encodings.pickle',
-    // Brightness, negative is darker, positive is brighter
+    // Brightness (0-100)
     brightness: 0,
-    // Contrast, positive value for more contrast
+    // Contrast (0-127)
     contrast: 0,
-    // rotate camera?
+    // Rotate camera image (-1 = no rotation, 0 = 90°, 1 = 180°, 2 = 270°)
     rotateCamera: -1,
     // method of face recognition (dnn = deep neural network, haar = haarcascade)
     method: 'dnn',
@@ -64,7 +64,7 @@ Module.register('MMM-Face-Reco-DNN', {
     // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
     multiUser: 0,
     // resoltuion of the image
-    resolution: [1280, 960],
+    resolution: [1920, 1080],
     // width of the image for processing
     processWidth: 500,
     // output image on mm
@@ -468,15 +468,15 @@ Module.register('MMM-Face-Reco-DNN', {
     }
   },
 
-	getDom: function() {
-    const wrapperEl = document.createElement("div");
-		wrapperEl.classList.add('face-recognition');
+  getDom: function () {
+    const wrapperEl = document.createElement('div');
+    wrapperEl.classList.add('face-recognition');
 
-    const imageEl  = document.createElement("img");
+    const imageEl = document.createElement('img');
     imageEl.classList.add('face-recognition-image');
     imageEl.src = 'data:image/jpg;base64,' + this.image;
     wrapperEl.appendChild(imageEl);
 
-		return wrapperEl;
-	},
+    return wrapperEl;
+  },
 });

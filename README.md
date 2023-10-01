@@ -1,12 +1,8 @@
-# Face Recognition with Open CV and Deep Neural Network
+# Face Recognition with Open CV
 
-This module detects and recognizes your face for [MagicMirror²](https://magicmirror.builders/). This module is mainly inspired by [MMM-Facial-Recognition-OCV3](https://github.com/normyx/MMM-Facial-Recognition-OCV3) and a tutorial from [Adrian Rosebrock](https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/). It uses the new DNN (Deep Neural Network) provided by OpenCV 4.1 and is much more accurate than the old Haar Cascade method. The old method is still available in this module because for a Raspberry Pi Zero the new way will be too heavy.
+This module detects and recognizes your face for [MagicMirror²](https://magicmirror.builders/).
 
 With this module you can show and hide all other modules depending on which person is recognized. For example, if you are in front of the mirror, the mirror will show you your agenda, but if a stranger is in front, the agenda will not be shown.
-
-## Development Status
-
-The module is finished as far as I can tell. I have tested the module on my development machine as well as on the MagicMirror and it works fine with the PiCamera.
 
 ## Screenshot
 
@@ -14,87 +10,23 @@ This module works in the background, and so no screenshots are available.
 
 ## Dependencies
 
-- [OpenCV 4.1](#opencv)
+- [OpenCV](#opencv)
 - [dlib](#dlib)
 - [face_recognition](#fr)
-- [imutils](#imutils)
 - [numpy](#numpy)
-- Camera
-
-I used a [Raspberry Pi Spy Cam](https://www.digitec.ch/de/s1/product/sertronics-rpi-spycam-kamera-elektronikmodul-8194042) which i built into my [mirror](https://forum.magicmirror.builders/topic/10567/my-old-wood-mirror?page=1). It also works fine with the regular Raspberry Pi camera module.
+- [picamera2](#picamera2)
 
 ## Installation
 
-### <a name="opencv"></a>OpenCV
+The installation is much more simplified now. You can run `npm install` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
 
-You will find a lot of good tutorials to install OpenCV 4 for your computer / Raspberry Pi. I am not going to write another one here. The module has only been tested with OpenCV 4.1. If you use another version, please let me know whether it works so I can make a list of all compatible versions.
+Be sure that your raspberry pi has enough cooling to do this job, it will be heavy used.
 
-- https://www.pyimagesearch.com/2018/08/17/install-opencv-4-on-macos/
-- https://www.pyimagesearch.com/2018/09/26/install-opencv-4-on-your-raspberry-pi/
-- https://pysource.com/2019/03/15/how-to-install-python-3-and-opencv-4-on-windows/
+But that this is working you need installed following before:
 
-If you install OpenCV in a virtual environment, please do not forget to set the correct `pythonPath` in the settings.
-
-**OpenCV 4.1.2 quick installation (without compliation) for Raspbian Buster**
-
-If you are planning to run OpenCV on Raspbian Buster, you can follow [these steps](https://github.com/cyysky/OpenCV-4.1.2-for-Raspbian) to install pre-compilled OpenCV v.4.2.1 package. This will save time for OpenCV compilation.
-
-```sh
-wget https://github.com/cyysky/OpenCV-4.1.2-for-Raspbian/raw/master/opencv_4.1.2-1_armhf.deb
-sudo dpkg -i opencv_4.1.2-1_armhf.deb
-sudo apt-get -f install
-sudo dpkg -i opencv_4.1.2-1_armhf.deb
-```
-
-### <a name="pip"></a>pip
-
-If you have both python v2 and python v3 installed then you may need to be specific in the use of either pip or pip3. If you are targetting python v3 then you will need to substitute pip3 instead of pip in the example commmands below.
-If you have only a single version of python installed then you may use pip3.
-
-### <a name="dlib"></a>dlib
-
-You can install dlib easily using pip with the following command.
-
-```sh
-pip3 install dlib
-```
-
-### <a name="fr"></a>face_recognition
-
-You can install the face_recognition library over pip too.
-
-```sh
-pip3 install face_recognition
-```
-
-If you have issues installing, this [tutorial](https://www.pyimagesearch.com/2017/05/01/install-dlib-raspberry-pi/) may be helpful.
-
-### <a name="imutils"></a>imutils
-
-You can install imutils over pip.
-
-```sh
-pip3 install imutils
-```
-
-### <a name="numpy"></a>numpy
-
-You can install numpy over pip.
-
-```sh
-pip3 install numpy
-```
-
-## Compatibility
-
-I have tested the following dependency versions. Let me know if the module works with another version so I can extend this list.
-
-| Dependency       | Versions |
-| ---------------- | -------- |
-| OpenCV           | 4.6.x    |
-| dlib             | 19.24.0  |
-| face_recognition | 1.3.0    |
-| imutils          | 0.5.4    |
+- node
+- pip
+- pipenv
 
 ## Install the Module
 
@@ -106,10 +38,6 @@ git clone https://github.com/nischi/MMM-Face-Reco-DNN.git
 cd MMM-Face-Reco-DNN
 npm install
 ```
-
-## Usage
-
-Here is a summary of the most important points to use this module. If you are interested how it works, have a look at Adrian Rosebrocks' [tutorial](https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/).
 
 ### Face Dataset
 
@@ -143,33 +71,13 @@ It's enough if you have around **10** pictures for each person. Try to use pictu
 
 After you set up your dataset, we need to go to the embeddings for the recognitions. I prepared a script for that. It took a while to run on my Macbook and will take much longer on a Raspberry Pi, so if possible, use it on a computer with more power and then transfer the resulting file.
 
-You will find a script called `encode.py` in folder `tools` of the module. The following arguments are default:
+You will find a script called `encode.py` in folder `tools` of the module. You can simply run following command:
 
 ```sh
-python3 encode.py -i ../dataset/ -e encodings.pickle -d hog
-
-# Arguments can be omitted to use the defaults above
-python3 encode.py
+npm run encode
 ```
-
-| Argument                    | Description                                                                                                                                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-i` / `--dataset`          | Path to dataset directory containing face images<br />**Default Value:** `../dataset/`                                                                                                                  |
-| `-e` / `--encodings`        | Path to serialized database of facial encodings<br />**Default Value:** `encodings.pickle`                                                                                                              |
-| `-d` / `--detection-method` | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog` |
 
 After that you are ready to configure the module and use it on your MagicMirror.
-
-### Building encodings.pickle in a Container
-
-Another option for building the encodings.pickle file is to use a Docker container. This way all dependencies and libraries are isolated from the host OS, you will only need `make` and `docker`.
-
-```sh
-cd tools;
-make  # generate an encodings.pickle with hog, or alternatively
-
-make encoding=cnn  # overide the default to use cnn encoding
-```
 
 ### Module Usage
 
@@ -179,11 +87,10 @@ To setup the module in MagicMirror², add the following section to the `config.j
 {
     module: 'MMM-Face-Reco-DNN',
     config: {
-      // Logout 15 seconds after user was not detected any more
-      // If they are detected within this period, the delay will start again
+      // Logout 15 seconds after user was not detecte anymore, if they will be detected between this 15
+      // Seconds, they delay will start again
       logoutDelay: 15000,
-      // How often the recognition starts in milliseconds
-      // With a Raspberry Pi 3+ it works well every 2 seconds
+      // How many time the recognition starts, with a RasPi 3+ it would be good every 2 seconds
       checkInterval: 2000,
       // Module set used for when there is no face detected ie no one is in front of the camera
       noFaceClass: 'noface',
@@ -197,52 +104,48 @@ To setup the module in MagicMirror², add the following section to the `config.j
       everyoneClass: 'everyone',
       // Set of modules that are always shown - show if there is a face or no face detected
       alwaysClass: 'always',
-      // XML to recognize with haarcascade
-      cascade: 'modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml',
-      // Pre-encoded pickle with the faces
-      encodings: 'modules/MMM-Face-Reco-DNN/tools/encodings.pickle',
-      // Use Raspberry Pi camera or another type
-      // 1 = RasPi camera, 0 = other camera
-      usePiCamera: 1,
-      // Brightness, negative is darker, positive is brighter
+      // xml to recognize with haarcascae
+      cascade: 'modules/MMM-Face-Reco-DNN/model/haarcascade_frontalface_default.xml',
+      // pre encoded pickle with the faces
+      encodings: 'modules/MMM-Face-Reco-DNN/model/encodings.pickle',
+      // Brightness (0-100)
       brightness: 0,
-      // Contrast, positive value for more contrast
+      // Contrast (0-127)
       contrast: 0,
-      // If using another type of camera, you can choose
-      // i.e. 0 = /dev/video0 or 'http://link.to/live'
-      source: 0,
-      // Rotate camera
-      rotateCamera: 0,
-      // Method of facial recognition
-      // dnn = deep neural network, haar = haarcascade
+      // Rotate camera image (-1 = no rotation, 0 = 90°, 1 = 180°, 2 = 270°)
+      rotateCamera: -1,
+      // method of face recognition (dnn = deep neural network, haar = haarcascade)
       method: 'dnn',
-      // Which face detection model to use
-      // "hog" is less accurate but faster on CPUs
-      // "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated
+      // which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate
+      // deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog".
       detectionMethod: 'hog',
-      // How long in milliseconds modules take to hide and show
+      // how fast in ms should the modules hide and show (face effect)
       animationSpeed: 0,
-      // Path to Python to run the face recognition
-      // null or '' means default path
+      // Path to Python to run the face recognition (null / '' means default path)
       pythonPath: null,
-      // Should a welcome message be shown using the MagicMirror alerts module?
+      // Boolean to toggle welcomeMessage
       welcomeMessage: true,
       // Dictionary for person name mapping in welcome message
-      // Allows for displaying name with complex character sets in welcome message e.g. jerome => Jérôme, hideyuki => 英之
+      // Allows for displaying name with complex character sets in welcome message
+      // e.g. jerome => Jérôme, hideyuki => 英之, mourad => مراد
       usernameDisplayMapping: null,
-      // Capture new pictures of recognized people, if unknown we save it in folder "unknown"
+      // Save some pictures from recognized people, if unknown we save it in folder "unknown"
       // So you can extend your dataset and retrain it afterwards for better recognitions
       extendDataset: false,
-      // If extendDataset is true, you need to set the full path of the dataset
+      // if extenDataset is set, you need to set the full path of the dataset
       dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
       // How much distance between faces to consider it a match. Lower is more strict.
       tolerance: 0.6,
       // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
       multiUser: 0,
-      // resolution of the image
-      resolution: [1280, 960],
+      // resoltuion of the image
+      resolution: [1920, 1080],
       // width of the image for processing
       processWidth: 500,
+      // output image on mm
+      outputmm: 0,
+      // turn on extra debugging 0=no, 1=yes
+      debug: 0,
     }
 }
 ```
@@ -257,35 +160,6 @@ The module sends notifications if a user is logged in or logged out. In addition
 | `USERS_LOGOUT`        | out       | Sent if users leave the camera's view                 |
 | `LOGGED_IN_USERS`     | out       | All logged in (in front of mirror) users              |
 | `GET_LOGGED_IN_USERS` | in        | Request all logged in users                           |
-
-## Configuration
-
-| Option                   | Description                                                                                                                                                                                                                                                                                       |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `logoutDelay`            | Log out this long after user was not detected any more. If they are detected within this period, the delay will start again. <br />**Default Value:** `15000`                                                                                                                                     |
-| `checkInterval`          | How often the recognition starts in milliseconds. With a Raspberry Pi 3+ it works well every 2 seconds. <br />**Default Value:** `2000`                                                                                                                                                           |
-| `noFaceClass`            | Module set used for when there is no face detected ie no one is in front of the camera. <br />**Default Value:** `noface`                                                                                                                                                                         |
-| `unknownClass`           | Module set used for when there is an unknown/unrecognised face detected. <br />**Default Value:** `unknown`                                                                                                                                                                                       |
-| `knownClass`             | Module set used for when there is a known/recognised face detected <br />**Default Value:** `known`                                                                                                                                                                                               |
-| `defaultClass`           | Module set used for strangers or if no user is detected. <br />**Default Value:** `default`                                                                                                                                                                                                       |
-| `alwaysClass`            | Set of modules that are always shown - show if there is a face or no face detected. <br />**Default Value:** `always`                                                                                                                                                                             |
-| `everyoneClass`          | Set of modules which should be shown for every recognised user. <br />**Default Value:** `everyone`                                                                                                                                                                                               |
-| `cascade`                | XML to recognize with haarcascade. <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/haarcascade_frontalface_default.xml`.                                                                                                                                                                |
-| `encodings`              | Pre-encoded pickle with the faces. <br />**Default Value:** `modules/MMM-Face-Reco-DNN/tools/encodings.pickle`                                                                                                                                                                                    |
-| `usePiCamera`            | Use Raspberry Pi camera or another type. (1 = RasPi camera, 0 = other camera) <br />**Default Value:** `1`                                                                                                                                                                                        |
-| `brightness`             | Brightness, negative is darker, positive is brighter <br />**Default Value:** `0`                                                                                                                                                                                                                 |
-| `contrast`               | Contrast, positive value for more contrast <br />**Default Value:** `0`                                                                                                                                                                                                                           |
-| `method`                 | Method of facial recognition. (dnn = deep neural network, haar = haarcascade) <br />**Default Value:** `dnn`                                                                                                                                                                                      |
-| `detectionMethod`        | Which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate deep-learning model which is GPU/CUDA accelerated (if available). <br />**Default Value:** `hog`                                                                                           |
-| `animationSpeed`         | How long in milliseconds modules take to hide and show. <br />**Default Value:** `0`                                                                                                                                                                                                              |
-| `pythonPath`             | Path to Python to run the face recognition. <br />**Default Value:** `null`                                                                                                                                                                                                                       |
-| `welcomeMessage`         | Should a welcome message be shown using the MagicMirror alerts module? <br />**Default Value:** `true`                                                                                                                                                                                            |
-| `usernameDisplayMapping` | Dictionary for mapping usernames (dataset directory names) to more complex character sets in the welcome message<br /> Example:` {"jerome" : "Jérôme", "hideyuki" : "英之", "mourad" : "مراد" }` <br />**Default Value:** `null` (usernames remain as defined in the dataset directory structure) |
-| `extendDataset`          | Capture new pictures of recognized people, if unknown we save it in folder "unknown". So you can extend your dataset and retrain it afterwards for better recognitions. <br />**Default Value:** `false`                                                                                          |
-| `dataset`                | If `extendDataset` is true, you need to set the full path of the dataset as well. <br /> **Default Value:** `modules/MMM-Face-Reco-DNN/dataset/`                                                                                                                                                  |
-| `multiUser`              | Allow multiple concurrent user logins, 0=no, 1=yes <br /> **Default Value:** `0`                                                                                                                                                                                                                  |
-| `resolution`             | Resolution of the image [x, y] <br /> **Default Value:** `[1280, 960]`                                                                                                                                                                                                                            |
-| `processWidth`           | Width of the image which will be processed <br /> **Default Value:** `500`                                                                                                                                                                                                                        |
 
 ## Facial Recognition States
 
@@ -403,8 +277,3 @@ The state to class mappings are:
 ## Known Issues
 
 - Support for multiple concurrently logged in users is not yet complete.
-
-## Credits
-
-- Adrian Rosebrock for the great tutorial: https://www.pyimagesearch.com/2018/06/25/raspberry-pi-face-recognition/
-- Normyx for the first version of Face-Recognition for MagicMirror: https://github.com/normyx/MMM-Facial-Recognition-OCV3

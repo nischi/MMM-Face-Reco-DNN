@@ -88,7 +88,12 @@ class Arguments:
             "-o", "--output", type=int, required=False, default=0, help="Show output"
         )
         ap.add_argument(
-            "-omm", "--outputmm", type=int, required=False, default=0, help="Show output on magic mirror"
+            "-omm",
+            "--outputmm",
+            type=int,
+            required=False,
+            default=0,
+            help="Show output on magic mirror",
         )
         ap.add_argument(
             "-eds",
@@ -117,13 +122,13 @@ class Arguments:
             "-br",
             "--brightness",
             default=0,
-            help="Brightness, negative is darker, positive is brighter",
+            help="Brightness (0-100)",
         )
         ap.add_argument(
             "-co",
             "--contrast",
             default=0,
-            help="Contrast, positive value for more contrast",
+            help="Contrast (0-127)",
         )
         ap.add_argument(
             "-res", "--resolution", default="1920,1080", help="Resolution of the image"

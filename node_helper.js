@@ -30,6 +30,7 @@ module.exports = NodeHelper.create({
         '--detectionMethod=' + this.config.detectionMethod,
         '--interval=' + this.config.checkInterval,
         '--output=' + this.config.output,
+        '--outputmm=' + this.config.outputmm,
         '--extendDataset=' + extendedDataset,
         '--dataset=' + this.config.dataset,
         '--tolerance=' + this.config.tolerance,
@@ -37,7 +38,6 @@ module.exports = NodeHelper.create({
         '--contrast=' + this.config.contrast,
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
-        '--outputmm=' + this.config.outputmm,
       ],
     };
 

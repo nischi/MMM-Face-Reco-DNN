@@ -22,11 +22,14 @@ The installation is much more simplified now. You can run `npm install` to insta
 
 Be sure that your raspberry pi has enough cooling to do this job, it will be heavy used.
 
-But that this is working you need installed following before:
+But that this is working you need installed system wide tools before:
 
 - node
-- pip
-- pipenv
+  - You can install this system wide or you can use nvm, i do use nvm to install it
+  - [install instructions for nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+  - run `nvm install stable` to install latest stable version
+- pip - [install instructions for pip](https://pip.pypa.io/en/stable/installation/)
+- pipenv - [install instructions for pipenv](https://pipenv.pypa.io/en/latest/installation/)
 
 ## Install the Module
 

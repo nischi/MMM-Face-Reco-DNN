@@ -29,7 +29,7 @@
     "pipenv-location": "pipenv --venv",
     "encode": "pipenv run python3 tools/encode.py -i dataset -e model/encodings.pickle",
     "recognition": "pipenv run python3 tools/recognition.py -e model/encodings.pickle -c model/haarcascade_frontalface_default.xml",
-    "postinstall": "pipenv install --site-packages"
+    "postinstall": "pipenv install --skip-lock"
   },
   "dependencies": {
     "python-shell": "5.0.0",

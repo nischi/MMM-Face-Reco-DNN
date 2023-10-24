@@ -18,18 +18,19 @@ This module works in the background, and so no screenshots are available.
 
 ## Installation
 
-The installation is much more simplified now. You can run `npm install` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
+The installation is much more simplified now. You can run `npm ci` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
 
 Be sure that your raspberry pi has enough cooling to do this job, it will be heavy used.
 
 But that this is working you need installed system wide tools before:
 
-- node
-  - You can install this system wide or you can use nvm, i do use nvm to install it
-  - [install instructions for nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-  - run `nvm install stable` to install latest stable version
-- pip - [install instructions for pip](https://pip.pypa.io/en/stable/installation/)
-- pipenv - [install instructions for pipenv](https://pipenv.pypa.io/en/latest/installation/)
+- node with nvm
+  - [install instructions](https://github.com/nvm-sh/nvm#installing-and-updating)
+  - run `nvm install --lts` to install latest LTS version
+- pip
+  - `sudo apt install python3-pip`
+- pipenv
+  - `sudo apt install pipenv`
 
 ## Install the Module
 

@@ -1,6 +1,6 @@
 {
   "name": "mmm-face-reco-dnn",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Face Recognition with Open CV and Deep Neural Network",
   "main": "MMM-Face-Reco-DNN.js",
   "repository": {
@@ -25,11 +25,8 @@
   "scripts": {
     "lint": "eslint .",
     "prettier": "prettier --write **/*.js",
-    "black": "pipenv run black **/*.py",
-    "pipenv-location": "pipenv --venv",
-    "encode": "pipenv run python3 tools/encode.py -i dataset -e model/encodings.pickle",
-    "recognition": "pipenv run python3 tools/recognition.py -e model/encodings.pickle -c model/haarcascade_frontalface_default.xml",
-    "postinstall": "pipenv install --skip-lock"
+    "encode": "python tools/encode.py -i dataset -e model/encodings.pickle",
+    "recognition": "python tools/recognition.py -e model/encodings.pickle -c model/haarcascade_frontalface_default.xml"
   },
   "dependencies": {
     "python-shell": "5.0.0",

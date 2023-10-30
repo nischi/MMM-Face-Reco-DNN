@@ -1,3 +1,8 @@
+# 2.0.1 (2023-11-01)
+
+- After a lot of install issues. We removed `pipenv` again and changed the install-instructions
+  - For Bookworm we added an extra install step for an virtual environment
+
 # 2.0.0 (2023-10-01)
 
 ## Breaking Changes

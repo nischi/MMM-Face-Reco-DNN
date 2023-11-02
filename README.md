@@ -15,18 +15,38 @@ This module works in the background, and so no screenshots are available.
 - [face_recognition](#fr)
 - [numpy](#numpy)
 - [picamera2](#picamera2)
+- [libcap-dev](#libcap-dev)
 
 ## Installation
 
-The installation is much more simplified now. You can run `npm install` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
+The installation is much more simplified now. You can run `npm ci` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
 
 Be sure that your raspberry pi has enough cooling to do this job, it will be heavy used.
 
-But that this is working you need installed following before:
+But that this is working you need installed system wide tools before:
 
-- node
+- node with nvm
+  - [install instructions](https://github.com/nvm-sh/nvm#installing-and-updating)
+  - run `nvm install --lts` to install latest LTS version
+  - run `nvm use --lts` to use latest LTS version
 - pip
-- pipenv
+  - `sudo apt install python3-pip`
+- libcap-dev
+  - `sudo apt install libcap-dev`
+- install python dependencies
+  - If you working with Bookworm you need to create first an virtual environment, please have a look in the next chapter
+  - `pip install face-recognition numpy dlib picamera2 opencv-python-headless`
+
+### Some additional steps for Bookworm and above to run it with an virtual environment
+
+If you want/need to install it with an virtual environment, you need to do following steps before you install the packages with pip
+
+- create environment with `python3 -m venv ~/python-facereco`
+- activate environment with `source ~/python-facereco/bin/activate`
+- install pip packages with `pip install face-recognition numpy dlib picamera2 opencv-python-headless`
+- Because some libraries uses global installed libs which are not available with pip, you need to change the config of your virtual environment
+  - `nano ~/python-facereco/pyvenv.cfg`
+  - Change line `include-system-site-packages = false` to `include-system-site-packages = true`
 
 ## Install the Module
 
@@ -121,7 +141,7 @@ To setup the module in MagicMirror², add the following section to the `config.j
       detectionMethod: 'hog',
       // how fast in ms should the modules hide and show (face effect)
       animationSpeed: 0,
-      // Path to Python to run the face recognition (null / '' means default path)
+      // Path to Python to run the face recognition (null / '' means default path, with Bookworm you need to set the virutal environment like /home/youruser/python-facereco/bin/python3. You can also find out the correct path if you are activated the virtual environment and run "which python3")
       pythonPath: null,
       // Boolean to toggle welcomeMessage
       welcomeMessage: true,

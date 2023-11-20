@@ -35,7 +35,7 @@ But that this is working you need installed system wide tools before:
   - `sudo apt install libcap-dev`
 - install python dependencies
   - If you working with Bookworm you need to create first an virtual environment, please have a look in the next chapter
-  - `pip install face-recognition numpy dlib picamera2 opencv-python-headless`
+  - `pip install face-recognition numpy dlib picamera2 opencv-python`
 
 ### Some additional steps for Bookworm and above to run it with an virtual environment
 
@@ -43,7 +43,7 @@ If you want/need to install it with an virtual environment, you need to do follo
 
 - create environment with `python3 -m venv ~/python-facereco`
 - activate environment with `source ~/python-facereco/bin/activate`
-- install pip packages with `pip install face-recognition numpy dlib picamera2 opencv-python-headless`
+- install pip packages with `pip install face-recognition numpy dlib picamera2 opencv-python`
 - Because some libraries uses global installed libs which are not available with pip, you need to change the config of your virtual environment
   - `nano ~/python-facereco/pyvenv.cfg`
   - Change line `include-system-site-packages = false` to `include-system-site-packages = true`
@@ -124,7 +124,7 @@ To setup the module in MagicMirror², add the following section to the `config.j
       everyoneClass: 'everyone',
       // Set of modules that are always shown - show if there is a face or no face detected
       alwaysClass: 'always',
-      // xml to recognize with haarcascae
+      // xml to recognize with haarcascade
       cascade: 'modules/MMM-Face-Reco-DNN/model/haarcascade_frontalface_default.xml',
       // pre encoded pickle with the faces
       encodings: 'modules/MMM-Face-Reco-DNN/model/encodings.pickle',

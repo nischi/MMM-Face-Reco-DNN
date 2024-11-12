@@ -17,7 +17,8 @@ import sys
 # Set your name, which should be used to expand the dataset
 name = 'YOUR_NAME' 
 
-# Set camera rotation
+# Set camera rotation. Note, Transform does not support rotations, but only 
+# vertical and horizontal flips
 # Transform()                   - the identity transform, which is the default
 # Transform(hflip=1)            - horizontal flip
 # Transform(vflip=1)            - vertical flip

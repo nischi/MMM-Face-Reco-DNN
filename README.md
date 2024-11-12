@@ -21,9 +21,12 @@ This module works in the background, and so no screenshots are available.
 
 The installation is much more simplified now. You can run `npm ci` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
 
-Be sure that your raspberry pi has enough cooling to do this job, it will be heavy used.
+Be sure that your raspberry pi has enough cooling to do this job, it will be heavily used. It is also 
+likely necessary to increase the available SWAP space for opencv and dlib to succesfully compile. SWAP 
+can be increased by editing the file: `sudo nano /etc/dphys-swapfile` and changing
+the value of `CONF_SWAPSIZE`. 1024 MB was enough to work on a RPi 4 (i.e. `CONF_SWAPSIZE=1024`). 
 
-But that this is working you need installed system wide tools before:
+For the installation procedure to work, you first need the following installed beforehand system wide:
 
 - node with nvm
   - [install instructions](https://github.com/nvm-sh/nvm#installing-and-updating)
@@ -35,7 +38,8 @@ But that this is working you need installed system wide tools before:
   - `sudo apt install libcap-dev`
 - install python dependencies
   - If you working with Bookworm you need to create first an virtual environment, please have a look in the next chapter
-  - `pip install face-recognition numpy dlib picamera2 opencv-python`
+  - Numpy versions 2.0+ do not seem to work with this module
+  - `pip install face-recognition numpy==1.26.4 dlib picamera2 opencv-python`
 
 ### Some additional steps for Bookworm and above to run it with an virtual environment
 
@@ -43,7 +47,7 @@ If you want/need to install it with an virtual environment, you need to do follo
 
 - create environment with `python3 -m venv ~/python-facereco`
 - activate environment with `source ~/python-facereco/bin/activate`
-- install pip packages with `pip install face-recognition numpy dlib picamera2 opencv-python`
+- install pip packages with `pip install face-recognition numpy==1.26.4 dlib picamera2 opencv-python`
 - Because some libraries uses global installed libs which are not available with pip, you need to change the config of your virtual environment
   - `nano ~/python-facereco/pyvenv.cfg`
   - Change line `include-system-site-packages = false` to `include-system-site-packages = true`
@@ -166,6 +170,12 @@ To setup the module in MagicMirror², add the following section to the `config.j
       outputmm: 0,
       // turn on extra debugging 0=no, 1=yes
       debug: 0,
+      // If specified, conditionally run face recognition when a notification with a name as specified by this 
+      // option is received with a boolean true/false payload. A True payload activates face recognition, False 
+      // deactivates it. An empty string here disables this functionality so face recognition always runs. Use for 
+      // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face 
+      // recognition when screen is on.
+      external_trigger_notification: '',
     }
 }
 ```

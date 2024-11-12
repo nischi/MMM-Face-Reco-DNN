@@ -71,6 +71,12 @@ Module.register('MMM-Face-Reco-DNN', {
     outputmm: 0,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
+    // If specified, conditionally run face recognition when a notification with a name as specified by this 
+    // option is received with a boolean true/false payload. A True payload activates face recognition, False 
+    // deactivates it. An empty string here disables this functionality so face recognition always runs. Use for 
+    // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face 
+    // recognition when screen is on.
+    external_trigger_notification: '',
   },
 
   timouts: {},
@@ -465,6 +471,13 @@ Module.register('MMM-Face-Reco-DNN', {
     if (notification === 'GET_LOGGED_IN_USERS') {
       Log.log(this.name + ' get logged in users ' + this.users);
       this.sendNotification('LOGGED_IN_USERS', this.users);
+    }
+
+    // If an external trigger notification name is specified, forward
+    // notification payload received on that notification name.
+    if (this.config.external_trigger_notification !== "" &&
+        notification === this.config.external_trigger_notification) {
+      this.sendSocketNotification(notification, payload);
     }
   },
 

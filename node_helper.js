@@ -21,6 +21,7 @@ module.exports = NodeHelper.create({
     const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
       mode: 'json',
+      pythonOptions: ['-u'], // Immediately flush buffer for std out/in monitoring/writing to work
       stderrParser: line => JSON.stringify(line),
       args: [
         '--cascade=' + this.config.cascade,
@@ -38,6 +39,7 @@ module.exports = NodeHelper.create({
         '--contrast=' + this.config.contrast,
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
+        '--run-only-on-notification=' + (this.config.external_trigger_notification !== '' ? '1' : '0'),
       ],
     };
 
@@ -81,15 +83,13 @@ module.exports = NodeHelper.create({
       }
     });
 
-    // Shutdown node helper
-    self.pyshell.end(function (err) {
-      if (err) throw err;
-      console.log('[' + self.name + '] ' + 'finished running...');
-    });
-
     onExit(function (_code, _signal) {
       self.destroy();
     });
+  },
+
+  send_python_cmd: function (cmd) {
+    this.pyshell.send(cmd);
   },
 
   python_stop: function () {
@@ -97,6 +97,12 @@ module.exports = NodeHelper.create({
   },
 
   destroy: function () {
+    const self = this
+    this.pyshell.end(function (err) {
+      if (err) throw err;
+      console.log('[' + self.name + '] ' + 'finished running...');
+    });
+
     console.log('[' + this.name + '] ' + 'Terminate python');
     this.pyshell.childProcess.kill();
   },
@@ -110,6 +116,16 @@ module.exports = NodeHelper.create({
       if (!pythonStarted) {
         pythonStarted = true;
         this.python_start();
+      }
+    }
+
+    // Notification for triggering face recognition received. Only send to python subprocess
+    // if it has been started
+    if (notification === this.config.external_trigger_notification && pythonStarted) {
+      if (payload === true) {
+        this.send_python_cmd('start');
+      } else {
+        this.send_python_cmd('stop');
       }
     }
   },

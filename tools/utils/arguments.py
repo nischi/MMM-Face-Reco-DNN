@@ -140,5 +140,12 @@ class Arguments:
             default=500,
             help="Resolution of the image which will be processed from OpenCV",
         )
+        ap.add_argument(
+            "-roon",
+            "--run-only-on-notification",
+            type=int,
+            default=0,
+            help="If 1, only runs face detection upon external trigger. If 0, face detection runs all the time.",
+        )
 
         Arguments.args = vars(ap.parse_args())

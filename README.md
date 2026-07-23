@@ -4,56 +4,97 @@ This module detects and recognizes your face for [MagicMirror²](https://magicmi
 
 With this module you can show and hide all other modules depending on which person is recognized. For example, if you are in front of the mirror, the mirror will show you your agenda, but if a stranger is in front, the agenda will not be shown.
 
-## Screenshot
+## Contents
 
-This module works in the background, and so no screenshots are available.
+- [How it works](#how-it-works)
+- [Requirements](#requirements)
+- [Installation](#installation) — [prerequisites](#1-system-prerequisites), [module](#2-install-the-module), [Python deps](#3-install-the-python-dependencies), [models](#4-models), [dataset](#5-create-your-face-dataset), [encodings](#6-build-the-face-encodings), [config](#7-configure-the-module)
+- [Motion gate](#motion-gate-pause-when-idle-with-mmm-motioncontrol)
+- [Notifications](#notifications)
+- [Facial Recognition States](#facial-recognition-states)
+- [Classes](#classes)
+- [Development & testing](#development)
+- [Known Issues](#known-issues)
 
-## Dependencies
+## How it works
 
-Face detection and recognition are handled entirely by OpenCV's built-in DNN
-models — the **YuNet** detector and the **SFace** recognizer — so there is no
-longer any `dlib` / `face_recognition` to compile.
+This module has **no display of its own** — it runs in the background and
+controls the visibility of *other* MagicMirror modules based on who is standing
+in front of the mirror.
 
-- [OpenCV](#opencv) (YuNet + SFace, bundled in the `opencv-python` wheel)
-- [numpy](#numpy)
-- [picamera2](#picamera2)
-- [libcap-dev](#libcap-dev)
+1. A small **Python process** reads frames from the camera and runs face
+   **detection** (OpenCV's **YuNet**) and **recognition** (OpenCV's **SFace**).
+   Each detected face is compared against the people you enrolled and classified
+   as *known* (a specific person), *unknown* (a stranger), or *no face*.
+2. It reports **login / logout** events back to the module over a JSON pipe.
+3. The module turns those into **MagicMirror notifications** and, using CSS
+   **classes** you assign to your other modules, shows or hides them — e.g. show
+   your calendar only when *you* are recognized, and hide it for strangers.
+
+Because detection and recognition run in a separate process, a slow or busy
+recognition step never freezes the mirror UI. Optionally, recognition can be
+**gated by motion** (see [Motion gate](#motion-gate-pause-when-idle-with-mmm-motioncontrol))
+so the camera only runs when someone is around.
+
+Detection and recognition are handled entirely by OpenCV's built-in DNN models,
+so there is **no `dlib` / `face_recognition` to compile** and no NumPy version pin.
+
+## Requirements
+
+- A **Raspberry Pi 3, 4 or 5** (no AI hat required) running **Raspberry Pi OS
+  Bullseye or newer** — Bookworm is recommended.
+- A camera supported by `picamera2` — the **Raspberry Pi Camera Module** or a
+  compatible CSI/USB camera.
+- A working **[MagicMirror²](https://magicmirror.builders/)** installation.
+- To try it out without a Pi, any computer with a webcam works — see
+  [Testing with a laptop / Mac webcam](#testing-with-a-laptop--mac-webcam).
 
 ## Installation
 
-Installation is now lightweight: there is **nothing to compile**. Run `npm ci`
-to install the node packages, then install the Python dependencies below. On a
-Raspberry Pi these are plain pre-built wheels, so no SWAP increase is required
-and any NumPy version works (no pin).
+There is **nothing to compile** — the Python dependencies are plain pre-built
+wheels, so no SWAP increase is needed. Follow these steps in order.
 
-For the installation procedure to work, you first need the following installed beforehand system wide:
+### 1. System prerequisites
 
-- node with nvm
-  - [install instructions](https://github.com/nvm-sh/nvm#installing-and-updating)
-  - run `nvm install --lts` to install latest LTS version
-  - run `nvm use --lts` to use latest LTS version
-- pip
-  - `sudo apt install python3-pip`
-- libcap-dev
-  - `sudo apt install libcap-dev`
-- install python dependencies
-  - If you are working with Bookworm you need to create a virtual environment first, please have a look in the next chapter
-  - `pip install opencv-python numpy picamera2`
+Install these system-wide first:
 
-### Some additional steps for Bookworm and above to run it with a virtual environment
+- **node with nvm** — [install instructions](https://github.com/nvm-sh/nvm#installing-and-updating), then `nvm install --lts` and `nvm use --lts`
+- **pip** — `sudo apt install python3-pip`
+- **libcap-dev** — `sudo apt install libcap-dev` (needed by `picamera2`)
 
-`picamera2` relies on the system-wide `libcamera` bindings that are installed
-via apt and are not available from pip, so on Bookworm the virtual environment
-has to be allowed to see the system site-packages:
+### 2. Install the module
 
-- create environment with `python3 -m venv ~/python-facereco`
-- activate environment with `source ~/python-facereco/bin/activate`
-- install pip packages with `pip install opencv-python numpy picamera2`
-- Because `picamera2` uses global installed libs which are not available with pip, you need to change the config of your virtual environment
-  - `nano ~/python-facereco/pyvenv.cfg`
-  - Change line `include-system-site-packages = false` to `include-system-site-packages = true`
+```sh
+cd ~/MagicMirror/modules/
+git clone https://github.com/nischi/MMM-Face-Reco-DNN.git
+cd MMM-Face-Reco-DNN
+npm install
+```
 
-### Models
+### 3. Install the Python dependencies
+
+```sh
+pip install opencv-python numpy picamera2
+```
+
+On **Bookworm and newer** you must install into a virtual environment, and
+because `picamera2` relies on the system-wide `libcamera` bindings (installed via
+apt, not available from pip) that environment has to see the system packages:
+
+```sh
+python3 -m venv ~/python-facereco
+source ~/python-facereco/bin/activate
+pip install opencv-python numpy picamera2
+# allow the venv to see the apt-installed libcamera / picamera2:
+nano ~/python-facereco/pyvenv.cfg
+#   change: include-system-site-packages = false  ->  = true
+```
+
+Then point the module at that interpreter by setting `pythonPath` in the config
+(step 7), e.g. `pythonPath: '/home/pi/python-facereco/bin/python3'`. Run
+`which python3` inside the activated venv to find the exact path.
+
+### 4. Models
 
 The two OpenCV model files ship with the repository in the `model/` folder, so
 there is nothing extra to download:
@@ -71,18 +112,7 @@ curl -L -o model/face_recognition_sface_2021dec.onnx \
   https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx
 ```
 
-## Install the Module
-
-Load this module directly from GitHub using the following commands.
-
-```sh
-cd ~/MagicMirror/modules/
-git clone https://github.com/nischi/MMM-Face-Reco-DNN.git
-cd MMM-Face-Reco-DNN
-npm install
-```
-
-### Face Dataset
+### 5. Create your face dataset
 
 First of all you need to create your face dataset. The module is preconfigured such that you store your dataset in the folder `dataset` in the root of the module. It is possible to use another folder if you want to.
 
@@ -110,21 +140,21 @@ Put each person in a seperate subdirectory like this:
 
 It's enough if you have around **10** pictures for each person. Try to use pictures in different settings and lighting if possible as it may help to build a better model of the person's face.
 
-### Facial Recognition Embeddings
+### 6. Build the face encodings
 
-After you set up your dataset, we need to go to the embeddings for the recognitions. I prepared a script for that. It took a while to run on my Macbook and will take much longer on a Raspberry Pi, so if possible, use it on a computer with more power and then transfer the resulting file.
+After you set up your dataset, you need to turn it into the encodings used for recognition. A script does this for you. It runs quickly on a laptop and much slower on a Raspberry Pi, so if possible run it on a more powerful computer and copy the resulting `model/encodings.pickle` to the Pi.
 
-You will find a script called `encode.py` in folder `tools` of the module. You can simply run following command:
+The script is `tools/encode.py`; run it via:
 
 ```sh
 npm run encode
 ```
 
-After that you are ready to configure the module and use it on your MagicMirror.
+Re-run this whenever you add or change dataset images. After that you are ready to configure the module.
 
-### Module Usage
+### 7. Configure the module
 
-To setup the module in MagicMirror², add the following section to the `config.js` file in the `MagicMirror/config` directory.
+To set up the module in MagicMirror², add the following section to the `config.js` file in the `MagicMirror/config` directory.
 
 ```js
 {

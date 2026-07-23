@@ -363,12 +363,20 @@ The state to class mappings are:
 
 ## Development
 
-The face recognition logic has a small unit test suite (no camera or model
-files required). Install the dev dependencies and run it with:
+The recognition logic has a small unit test suite (no camera or model files
+required), split across JavaScript and Python:
 
 ```sh
-pip install -r tools/requirements-dev.txt
-npm test        # runs: python -m pytest tools/tests
+npm run test:js   # node --test — the motion-gate logic, runs anywhere
+npm run test:py   # python3 -m pytest tools/tests — needs the deps below
+npm test          # both
+```
+
+The Python tests need `pytest` (and OpenCV/NumPy). On a machine without them
+installed, install into a virtual environment first:
+
+```sh
+pip install -r tools/requirements-dev.txt   # pytest + numpy
 ```
 
 JavaScript is linted and formatted with ESLint / Prettier:
@@ -389,7 +397,7 @@ via OpenCV instead of `picamera2` by passing `--camera=webcam`:
 npm run encode
 
 # 2. run live recognition against the built-in webcam, showing a preview window
-python tools/recognition.py --camera=webcam --output=1 \
+python3 tools/recognition.py --camera=webcam --output=1 \
   -e model/encodings.pickle \
   -dm model/face_detection_yunet_2023mar.onnx \
   -rm model/face_recognition_sface_2021dec.onnx

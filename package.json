@@ -25,9 +25,11 @@
   "scripts": {
     "lint": "eslint .",
     "prettier": "prettier --write **/*.js",
-    "test": "node --test && python -m pytest tools/tests",
-    "encode": "python tools/encode.py -i dataset -e model/encodings.pickle -dm model/face_detection_yunet_2023mar.onnx -rm model/face_recognition_sface_2021dec.onnx",
-    "recognition": "python tools/recognition.py -e model/encodings.pickle -dm model/face_detection_yunet_2023mar.onnx -rm model/face_recognition_sface_2021dec.onnx"
+    "test": "node --test && python3 -m pytest tools/tests",
+    "test:js": "node --test",
+    "test:py": "python3 -m pytest tools/tests",
+    "encode": "python3 tools/encode.py -i dataset -e model/encodings.pickle -dm model/face_detection_yunet_2023mar.onnx -rm model/face_recognition_sface_2021dec.onnx",
+    "recognition": "python3 tools/recognition.py -e model/encodings.pickle -dm model/face_detection_yunet_2023mar.onnx -rm model/face_recognition_sface_2021dec.onnx"
   },
   "dependencies": {
     "python-shell": "5.0.0",

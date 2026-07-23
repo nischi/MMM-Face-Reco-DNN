@@ -71,7 +71,12 @@ Print.printJson("status", resolution)
 Print.printJson("status", processWidth)
 
 camera = Camera.create(Arguments.get("camera"), resolution)
-camera.start()
+
+# In motion-gate mode we boot paused (camera stopped) until a start command
+# arrives from the first motion wake; otherwise start the camera right away.
+start_paused = bool(Arguments.get("start_paused"))
+if not start_paused:
+    camera.start()
 
 
 # variable for prev names
@@ -87,8 +92,12 @@ if Arguments.get("extendDataset") is True:
 
 cosineThreshold = float(Arguments.get("cosineThreshold"))
 
-# Default to running face recognition
-run_face_recognition = True
+# Run face recognition immediately unless we were asked to start paused, in
+# which case we wait for an external 'start' command (e.g. from the motion gate)
+run_face_recognition = not start_paused
+if start_paused:
+    external_trigger = False
+    Print.printJson("status", "Started paused, waiting for a start command.")
 
 # If triggering face recognition on external notification, start
 # listener thread for that external trigger

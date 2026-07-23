@@ -198,9 +198,42 @@ To setup the module in MagicMirror², add the following section to the `config.j
       // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face 
       // recognition when screen is on.
       external_trigger_notification: '',
+      // Motion gate: only run face recognition while there is camera motion (from MMM-MotionControl),
+      // and pause it otherwise to save CPU/power. Recognition stays awake while a face is still
+      // recognized, so it never blanks on a stationary viewer. false = always run (default).
+      motionGate: false,
+      // Notification that resumes recognition (must match MMM-MotionControl's wakeNotification)
+      motionWakeNotification: 'MOTION_WAKE',
+      // Notification that lets recognition stand down (must match MMM-MotionControl's clearedNotification)
+      motionClearedNotification: 'MOTION_CLEARED',
+      // Grace period (ms) after everything is quiet before recognition is actually paused
+      motionPauseDelay: 2000,
     }
 }
 ```
+
+## Motion gate (pause when idle with MMM-MotionControl)
+
+By default face recognition runs continuously. If you also run
+[MMM-MotionControl](https://github.com/nischi/MMM-MotionControl), you can set
+`motionGate: true` to only run recognition while there is motion in front of the
+camera, and pause it (camera stopped, no CPU) the rest of the time.
+
+How it works:
+
+- On startup the recognition process boots **paused** and waits for motion.
+- When MMM-MotionControl broadcasts its wake notification (`MOTION_WAKE`),
+  recognition **resumes**.
+- When it broadcasts its cleared notification (`MOTION_CLEARED`), recognition is
+  allowed to **pause** — but only once no one is recognized anymore. While a face
+  is still being recognized, recognition keeps running, so the mirror never
+  blanks on someone standing still. It pauses `motionPauseDelay` ms after both
+  motion and faces are gone.
+
+Make sure the notification names match MMM-MotionControl's `wakeNotification` /
+`clearedNotification` config. Leave `motionGate: false` (the default) to always
+run recognition. Use either `motionGate` **or** `external_trigger_notification`,
+not both.
 
 ## Notifications
 
@@ -212,6 +245,8 @@ The module sends notifications if a user is logged in or logged out. In addition
 | `USERS_LOGOUT`        | out       | Sent if users leave the camera's view                 |
 | `LOGGED_IN_USERS`     | out       | All logged in (in front of mirror) users              |
 | `GET_LOGGED_IN_USERS` | in        | Request all logged in users                           |
+| `MOTION_WAKE`         | in        | Resumes recognition when `motionGate` is on (name configurable) |
+| `MOTION_CLEARED`      | in        | Lets recognition stand down when `motionGate` is on (name configurable) |
 
 ## Facial Recognition States
 

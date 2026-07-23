@@ -17,12 +17,12 @@ The system is split across two runtimes that communicate over a JSON pipe:
 npm ci                 # install node deps, then pip-installs the python deps (see README)
 npm run lint           # eslint over all JS
 npm run prettier       # format all JS in place
-npm test               # python -m pytest tools/tests (needs tools/requirements-dev.txt)
+npm test               # node --test (motiongate.js) + python -m pytest tools/tests
 npm run encode         # build model/encodings.pickle from the dataset/ folder
 npm run recognition    # run the recognition loop standalone (for debugging outside MM)
 ```
 
-Unit tests (`tools/tests/`) cover the pure recognition logic, image utils, and the encodings pickle format — no camera or ONNX models required. The rest (camera capture, live recognition, MM integration) is still verified manually. Run a single test with `pytest tools/tests/test_recognizer.py -k best_match`.
+Unit tests cover the pure logic with no camera/models: Python (`tools/tests/`) for recognition, image utils, and the encodings pickle format; JS (`test/motiongate.test.js`, `node --test`) for the motion-gate decision. The rest (camera capture, live recognition, MM integration) is still verified manually. Run a single test with `pytest tools/tests/test_recognizer.py -k best_match` or `node --test test/motiongate.test.js`.
 
 Node version is pinned to **20.5** (`.nvmrc`). Any NumPy version works — the old `numpy<2` pin was a `dlib` constraint and is gone.
 
@@ -37,12 +37,16 @@ python tools/recognition.py -e model/encodings.pickle -dm model/face_detection_y
 ### The two-process pipeline
 
 1. On MM startup, `MMM-Face-Reco-DNN.js` `start()` sends its full `config` to `node_helper.js` via `sendSocketNotification('CONFIG', ...)`.
-2. `node_helper.js` `python_start()` spawns `tools/recognition.py` with **python-shell** in `json` mode, translating every config key into a `--flag=value` CLI arg. The Python arg parser lives in `tools/utils/arguments.py` — **any new config option must be wired in three places**: the module `defaults`, the `node_helper.js` `args` array, and `arguments.py`.
+2. `node_helper.js` `python_start()` spawns `tools/recognition.py` with **python-shell** in `json` mode, translating every config key into a `--flag=value` CLI arg. The Python arg parser lives in `tools/utils/arguments.py` — **any config option the Python side needs must be wired in three places**: the module `defaults`, the `node_helper.js` `args` array, and `arguments.py`. (Browser-only options, like the motion-gate notification names, live only in the module `defaults`.)
 3. The Python loop grabs camera frames (`picamera2`), detects + recognizes faces, and emits newline-delimited JSON objects on stdout (`utils/print.py` → `Print.printJson`). Keys it emits: `status`, `login`, `logout`, `camera_image`.
 4. `node_helper.js` reads those messages and forwards `login`/`logout` to the browser module as a `user` socket notification (and `camera_image` if `outputmm` is on).
 5. `MMM-Face-Reco-DNN.js` turns those into MagicMirror notifications (`USERS_LOGIN`, `USERS_LOGOUT`, `USERS_LOGOUT_MODULES`) and, more importantly, shows/hides modules.
 
-Communication is **bidirectional**: `node_helper.js` can write `start`/`stop`/`exit` commands to the Python process's stdin. Python's `monitor_stdin_for_command()` thread reads these to pause/resume recognition. This is driven by the `external_trigger_notification` config — when set, recognition only runs while that MM notification's payload is `true` (e.g. pause when the screen is off).
+Communication is **bidirectional**: `node_helper.js` can write `start`/`stop`/`exit` commands to the Python process's stdin. Python's `monitor_stdin_for_command()` thread reads these to pause/resume recognition. Two features drive this: the `external_trigger_notification` config (recognition runs while that MM notification's payload is `true`, e.g. pause when the screen is off), and the **motion gate** (below). Either enables `--run-only-on-notification`; the gate additionally passes `--start-paused=1` so Python boots paused.
+
+### The motion gate (`motionGate`)
+
+Opt-in pause-when-idle, driven by [MMM-MotionControl](https://github.com/nischi/MMM-MotionControl)'s `MOTION_WAKE` / `MOTION_CLEARED` broadcasts. The decision logic is a pure function in `motiongate.js` (`MotionGate.nextAction`), loaded into the browser via `getScripts()` and unit-tested with `node --test` (`test/motiongate.test.js`). The browser module holds the state (`motionActive`, `motionRunning`, `motionPauseTimer`) and calls `applyMotionGate()` on every relevant event (wake, cleared, login, logout). Core rule: run while `motionActive || userPresent` — the `userPresent` term is the **presence guard** so recognition never pauses on someone standing still. When it should pause, a `motionPauseDelay` timer fires and the module sends `MOTION_GATE_CONTROL` (`start`/`stop`) to `node_helper`, which forwards it to Python's stdin. Boots paused via `--start-paused`; resumes on the first wake.
 
 ### The class/state visibility engine (the tricky part)
 

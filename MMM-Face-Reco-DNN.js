@@ -77,12 +77,33 @@ Module.register('MMM-Face-Reco-DNN', {
     // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face
     // recognition when screen is on.
     external_trigger_notification: '',
+    // Motion gate: only run face recognition while there is camera motion (from
+    // MMM-MotionControl), and pause it otherwise to save CPU/power. Recognition
+    // stays awake while a face is still recognized, so it never blanks on a
+    // stationary viewer. Set false (default) to always run recognition.
+    motionGate: false,
+    // Notification that resumes recognition (must match MMM-MotionControl's wakeNotification).
+    motionWakeNotification: 'MOTION_WAKE',
+    // Notification that allows recognition to stand down (must match MMM-MotionControl's clearedNotification).
+    motionClearedNotification: 'MOTION_CLEARED',
+    // Grace period (ms) after everything is quiet before recognition is actually paused.
+    motionPauseDelay: 2000,
   },
 
   timouts: {},
   users: [],
   userClasses: [],
   image: '',
+  // motion gate runtime state
+  motionActive: false,
+  motionRunning: true,
+  motionPauseTimer: null,
+
+  // ----------------------------------------------------------------------------------------------------
+  // Load the pure motion-gate decision helper so it is available as MotionGate.
+  getScripts: function () {
+    return [this.file('motiongate.js')];
+  },
 
   // ----------------------------------------------------------------------------------------------------
   start: function () {
@@ -96,6 +117,51 @@ Module.register('MMM-Face-Reco-DNN', {
     this.config.classes_noface = [this.config.noFaceClass, this.config.defaultClass, this.config.alwaysClass];
     this.config.classes_unknown = [this.config.unknownClass, this.config.defaultClass, this.config.everyoneClass, this.config.alwaysClass];
     this.config.classes_known = [this.config.knownClass, this.config.everyoneClass, this.config.alwaysClass];
+
+    // In motion-gate mode the python process boots paused (--start-paused), so
+    // reflect that here and wait for the first motion wake to resume it.
+    if (this.config.motionGate) {
+      this.motionRunning = false;
+    }
+  },
+
+  // ----------------------------------------------------------------------------------------------------
+  // Motion gate: reconcile recognition running/paused state with motion + presence.
+  applyMotionGate: function () {
+    if (!this.config.motionGate) {
+      return;
+    }
+
+    var action = MotionGate.nextAction({
+      motionActive: this.motionActive,
+      userPresent: this.users.length > 0,
+      running: this.motionRunning,
+      pausePending: this.motionPauseTimer != null,
+    });
+
+    this.config.debug && Log.log(this.name + ' motion gate action: ' + action);
+
+    if (action === 'resume') {
+      this.clearMotionPauseTimer();
+      this.motionRunning = true;
+      this.sendSocketNotification('MOTION_GATE_CONTROL', 'start');
+    } else if (action === 'cancel-pause') {
+      this.clearMotionPauseTimer();
+    } else if (action === 'schedule-pause') {
+      var self = this;
+      this.motionPauseTimer = setTimeout(function () {
+        self.motionPauseTimer = null;
+        self.motionRunning = false;
+        self.sendSocketNotification('MOTION_GATE_CONTROL', 'stop');
+      }, this.config.motionPauseDelay);
+    }
+  },
+
+  clearMotionPauseTimer: function () {
+    if (this.motionPauseTimer != null) {
+      clearTimeout(this.motionPauseTimer);
+      this.motionPauseTimer = null;
+    }
   },
 
   // ----------------------------------------------------------------------------------------------------
@@ -195,6 +261,9 @@ Module.register('MMM-Face-Reco-DNN', {
         title: this.translate('title'),
       });
     }
+
+    // a recognized user is present, which keeps recognition awake in the motion gate
+    this.applyMotionGate();
   },
 
   // ----------------------------------------------------------------------------------------------------
@@ -275,6 +344,9 @@ Module.register('MMM-Face-Reco-DNN', {
       // not how we get to here, but we do. It should be stopped in the socketNotificationReceived function but somehow either something else calls this function or that code does not work
       this.config.debug && Log.log('Detected a logout_user call for ' + name + ' but they were not logged in.');
     }
+
+    // a user just left; if motion is also gone the gate can now stand recognition down
+    this.applyMotionGate();
   },
 
   // ----------------------------------------------------------------------------------------------------
@@ -477,6 +549,18 @@ Module.register('MMM-Face-Reco-DNN', {
     // notification payload received on that notification name.
     if (this.config.external_trigger_notification !== '' && notification === this.config.external_trigger_notification) {
       this.sendSocketNotification(notification, payload);
+    }
+
+    // Motion gate: motion started -> resume recognition; motion cleared -> allow
+    // it to stand down (subject to the presence guard inside applyMotionGate).
+    if (this.config.motionGate) {
+      if (notification === this.config.motionWakeNotification) {
+        this.motionActive = true;
+        this.applyMotionGate();
+      } else if (notification === this.config.motionClearedNotification) {
+        this.motionActive = false;
+        this.applyMotionGate();
+      }
     }
   },
 

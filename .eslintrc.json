@@ -7,7 +7,8 @@
   "globals": {
     "Module": "readonly",
     "Log": "readonly",
-    "MM": "readonly"
+    "MM": "readonly",
+    "MotionGate": "readonly"
   },
   "extends": ["eslint:recommended", "plugin:import/recommended", "plugin:prettier/recommended"],
   "plugins": ["prettier"],

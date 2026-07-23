@@ -38,7 +38,8 @@ module.exports = NodeHelper.create({
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
         '--camera=' + this.config.camera,
-        '--run-only-on-notification=' + (this.config.external_trigger_notification !== '' ? '1' : '0'),
+        '--run-only-on-notification=' + (this.config.external_trigger_notification !== '' || this.config.motionGate ? '1' : '0'),
+        '--start-paused=' + (this.config.motionGate ? '1' : '0'),
       ],
     };
 
@@ -126,6 +127,11 @@ module.exports = NodeHelper.create({
       } else {
         this.send_python_cmd('stop');
       }
+    }
+
+    // Motion gate control from the module: payload is 'start' or 'stop'
+    if (notification === 'MOTION_GATE_CONTROL' && pythonStarted) {
+      this.send_python_cmd(payload);
     }
   },
 

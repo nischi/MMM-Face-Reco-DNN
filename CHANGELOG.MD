@@ -1,3 +1,14 @@
+# Unreleased
+
+- Added a **motion gate** (`motionGate`, default off): when enabled, face
+  recognition only runs while there is camera motion (via MMM-MotionControl's
+  `MOTION_WAKE` / `MOTION_CLEARED` broadcasts) and pauses otherwise to save
+  CPU/power. Recognition stays awake while a face is still recognized, so the
+  mirror never blanks on a stationary viewer. New config: `motionGate`,
+  `motionWakeNotification`, `motionClearedNotification`, `motionPauseDelay`.
+  - recognition.py gains a `--start-paused` flag so it boots paused in gate mode.
+  - Pure decision logic lives in `motiongate.js`, unit tested with `node --test`.
+
 # 3.0.0
 
 ## Breaking Changes

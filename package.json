@@ -25,7 +25,7 @@
   "scripts": {
     "lint": "eslint .",
     "prettier": "prettier --write **/*.js",
-    "test": "python -m pytest tools/tests",
+    "test": "node --test && python -m pytest tools/tests",
     "encode": "python tools/encode.py -i dataset -e model/encodings.pickle -dm model/face_detection_yunet_2023mar.onnx -rm model/face_recognition_sface_2021dec.onnx",
     "recognition": "python tools/recognition.py -e model/encodings.pickle -dm model/face_detection_yunet_2023mar.onnx -rm model/face_recognition_sface_2021dec.onnx"
   },

@@ -5,8 +5,6 @@
  * MIT Licensed.
  */
 
-/*global require, module, log*/
-
 'use strict';
 
 const NodeHelper = require('node_helper');
@@ -24,21 +22,22 @@ module.exports = NodeHelper.create({
       pythonOptions: ['-u'], // Immediately flush buffer for std out/in monitoring/writing to work
       stderrParser: line => JSON.stringify(line),
       args: [
-        '--cascade=' + this.config.cascade,
         '--encodings=' + this.config.encodings,
+        '--detModel=' + this.config.detModel,
+        '--recModel=' + this.config.recModel,
         '--rotateCamera=' + this.config.rotateCamera,
-        '--method=' + this.config.method,
-        '--detectionMethod=' + this.config.detectionMethod,
         '--interval=' + this.config.checkInterval,
         '--output=' + this.config.output,
         '--outputmm=' + this.config.outputmm,
         '--extendDataset=' + extendedDataset,
         '--dataset=' + this.config.dataset,
-        '--tolerance=' + this.config.tolerance,
+        '--cosineThreshold=' + this.config.cosineThreshold,
+        '--detScoreThreshold=' + this.config.detScoreThreshold,
         '--brightness=' + this.config.brightness,
         '--contrast=' + this.config.contrast,
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
+        '--camera=' + this.config.camera,
         '--run-only-on-notification=' + (this.config.external_trigger_notification !== '' ? '1' : '0'),
       ],
     };
@@ -97,7 +96,7 @@ module.exports = NodeHelper.create({
   },
 
   destroy: function () {
-    const self = this
+    const self = this;
     this.pyshell.end(function (err) {
       if (err) throw err;
       console.log('[' + self.name + '] ' + 'finished running...');

@@ -1,7 +1,13 @@
 {
   "env": {
     "browser": true,
+    "node": true,
     "es2021": true
+  },
+  "globals": {
+    "Module": "readonly",
+    "Log": "readonly",
+    "MM": "readonly"
   },
   "extends": ["eslint:recommended", "plugin:import/recommended", "plugin:prettier/recommended"],
   "plugins": ["prettier"],

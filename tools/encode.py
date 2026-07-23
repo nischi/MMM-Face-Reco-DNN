@@ -1,5 +1,4 @@
 # import the necessary packages
-import face_recognition
 import pickle
 import cv2
 import os
@@ -8,6 +7,14 @@ from utils.arguments import Arguments
 
 # construct the argument parser and parse the arguments
 Arguments.prepareEncodingArguments()
+
+# create the YuNet face detector and the SFace face recognizer (both bundled
+# with OpenCV's DNN module). The detector's input size is set per image below.
+# Dataset images are curated (each folder is known to contain the person), so
+# we use a lenient detection score threshold to avoid skipping usable photos;
+# only the single highest-scoring face per image is embedded.
+detector = cv2.FaceDetectorYN.create(Arguments.get("detModel"), "", (320, 320), 0.6)
+recognizer = cv2.FaceRecognizerSF.create(Arguments.get("recModel"), "")
 
 # grab the paths to the input images in our dataset
 print("[INFO] quantifying faces...")
@@ -25,28 +32,36 @@ for i, imagePath in enumerate(imagePaths):
     )
     name = os.path.basename(os.path.dirname(imagePath))
 
-    # load the input image and convert it from RGB (OpenCV ordering)
-    # to dlib ordering (RGB)
+    # load the input image
     image = cv2.imread(imagePath)
-    rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if image is None:
+        print("[WARN] could not read image, skipping: {}".format(imagePath))
+        continue
 
-    # detect the (x, y)-coordinates of the bounding boxes
-    # corresponding to each face in the input image
-    boxes = face_recognition.face_locations(
-        rgb, model=Arguments.get("detection_method")
-    )
+    # detect the faces in the image
+    (h, w) = image.shape[:2]
+    detector.setInputSize((w, h))
+    _, faces = detector.detect(image)
 
-    # compute the facial embedding for the face
-    encodings = face_recognition.face_encodings(rgb, boxes)
+    if faces is None:
+        print("[WARN] no face found, skipping: {}".format(imagePath))
+        continue
 
-    # loop over the encodings
-    for encoding in encodings:
-        # add each encoding + name to our set of known names and
-        # encodings
-        knownEncodings.append(encoding)
-        knownNames.append(name)
+    # a dataset image is meant to show one person, so keep only the most
+    # confident detection (the last column of each row is the score)
+    face = max(faces, key=lambda f: f[-1])
 
-# dump the facial encodings + names to disk
+    # align + crop the face using YuNet's landmarks, then embed it
+    aligned = recognizer.alignCrop(image, face)
+    encoding = recognizer.feature(aligned)
+
+    # add the encoding + name to our set of known names and encodings.
+    # flatten() turns the (1, 128) feature into a flat 128-D vector.
+    knownEncodings.append(encoding.flatten())
+    knownNames.append(name)
+
+# dump the facial encodings + names to disk. The format ({"encodings", "names"})
+# is unchanged so recognition.py can load it exactly as before.
 print("[INFO] serializing encodings...")
 data = {"encodings": knownEncodings, "names": knownNames}
 f = open(Arguments.get("encodings"), "wb")

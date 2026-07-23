@@ -1,0 +1,5 @@
+# Development-only dependencies for running the unit tests (npm test).
+# The runtime dependencies (opencv-python, numpy, picamera2) are installed
+# separately per the README.
+pytest
+numpy

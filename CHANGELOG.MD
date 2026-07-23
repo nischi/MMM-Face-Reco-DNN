@@ -1,3 +1,30 @@
+# 3.0.0
+
+## Breaking Changes
+
+- Replaced the `dlib` / `face_recognition` engine with OpenCV's built-in
+  **YuNet** face detector and **SFace** recognizer. This removes the heaviest
+  part of the install: **no more compiling `dlib`**, no SWAP increase, and the
+  `numpy==1.26.4` pin is gone (any NumPy version works).
+  - New Python install line: `pip install opencv-python numpy picamera2`
+  - Two ONNX model files now ship in `model/`
+    (`face_detection_yunet_2023mar.onnx`, `face_recognition_sface_2021dec.onnx`)
+    and the `haarcascade_frontalface_default.xml` was removed.
+- Config changes (breaking):
+  - **Removed** `cascade`, `method`, `detectionMethod`, and `tolerance`.
+  - **Added** `detModel` and `recModel` (paths to the ONNX models),
+    `cosineThreshold` (SFace match threshold, default `0.363`, **higher = stricter**,
+    replacing the old distance-based `tolerance`), and `detScoreThreshold`
+    (YuNet detection confidence, default `0.9`).
+- After upgrading you must regenerate embeddings with `npm run encode`; the old
+  dlib-generated `encodings.pickle` is not compatible.
+
+## Other
+
+- Added a Python unit test suite (`npm test` → `pytest tools/tests`) covering the
+  match/diff logic, image utilities, and the encodings pickle format.
+- Extracted the pure recognition logic into `tools/utils/recognizer.py`.
+
 # 2.0.2 (2024-11-12)
 - Added feature to conditionally trigger face recognition to start and stop via a Magic Mirror notification. Use of this feature is optional. Use for example with MMM-Pir to turn off face recognition when monitor is off, and back on when monitor is on.
   - node_helper sends commands to the python child process via its std input upon receiving an external notfication. 

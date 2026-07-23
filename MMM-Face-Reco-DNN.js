@@ -5,11 +5,8 @@
  * MIT Licensed.
  */
 
-/*global log*/
-
 'use strict';
 
-// eslint-disable-next-line no-undef
 Module.register('MMM-Face-Reco-DNN', {
   defaults: {
     // Logout 15 seconds after user was not detecte anymore, if they will be detected between this 15
@@ -29,21 +26,18 @@ Module.register('MMM-Face-Reco-DNN', {
     everyoneClass: 'everyone',
     // Set of modules that are always shown - show if there is a face or no face detected
     alwaysClass: 'always',
-    // xml to recognize with haarcascae
-    cascade: 'modules/MMM-Face-Reco-DNN/model/haarcascade_frontalface_default.xml',
     // pre encoded pickle with the faces
     encodings: 'modules/MMM-Face-Reco-DNN/model/encodings.pickle',
+    // YuNet face detection ONNX model (ships in the model/ folder)
+    detModel: 'modules/MMM-Face-Reco-DNN/model/face_detection_yunet_2023mar.onnx',
+    // SFace face recognition ONNX model (ships in the model/ folder)
+    recModel: 'modules/MMM-Face-Reco-DNN/model/face_recognition_sface_2021dec.onnx',
     // Brightness (0-100)
     brightness: 0,
     // Contrast (0-127)
     contrast: 0,
     // Rotate camera image (-1 = no rotation, 0 = 90°, 1 = 180°, 2 = 270°)
     rotateCamera: -1,
-    // method of face recognition (dnn = deep neural network, haar = haarcascade)
-    method: 'dnn',
-    // which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate
-    // deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog".
-    detectionMethod: 'hog',
     // how fast in ms should the modules hide and show (face effect)
     animationSpeed: 0,
     // Path to Python to run the face recognition (null / '' means default path)
@@ -59,22 +53,28 @@ Module.register('MMM-Face-Reco-DNN', {
     extendDataset: false,
     // if extenDataset is set, you need to set the full path of the dataset
     dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
-    // How much distance between faces to consider it a match. Lower is more strict.
-    tolerance: 0.6,
+    // Minimum SFace cosine similarity to consider a face a match. Higher is more strict.
+    // 0.363 is the value tuned on the LFW benchmark; raise it if you get false matches.
+    cosineThreshold: 0.363,
+    // Minimum YuNet detection confidence to treat a region as a face (0-1).
+    // Lower this if faces are missed in poor lighting; raise it to reduce false detections.
+    detScoreThreshold: 0.9,
     // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
     multiUser: 0,
     // resoltuion of the image
     resolution: [1920, 1080],
     // width of the image for processing
     processWidth: 500,
+    // camera back-end: 'picamera2' (Raspberry Pi) or 'webcam' (OpenCV VideoCapture, e.g. a laptop webcam)
+    camera: 'picamera2',
     // output image on mm
     outputmm: 0,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
-    // If specified, conditionally run face recognition when a notification with a name as specified by this 
-    // option is received with a boolean true/false payload. A True payload activates face recognition, False 
-    // deactivates it. An empty string here disables this functionality so face recognition always runs. Use for 
-    // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face 
+    // If specified, conditionally run face recognition when a notification with a name as specified by this
+    // option is received with a boolean true/false payload. A True payload activates face recognition, False
+    // deactivates it. An empty string here disables this functionality so face recognition always runs. Use for
+    // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face
     // recognition when screen is on.
     external_trigger_notification: '',
   },
@@ -475,8 +475,7 @@ Module.register('MMM-Face-Reco-DNN', {
 
     // If an external trigger notification name is specified, forward
     // notification payload received on that notification name.
-    if (this.config.external_trigger_notification !== "" &&
-        notification === this.config.external_trigger_notification) {
+    if (this.config.external_trigger_notification !== '' && notification === this.config.external_trigger_notification) {
       this.sendSocketNotification(notification, payload);
     }
   },

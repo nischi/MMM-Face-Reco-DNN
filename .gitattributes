@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Face recognition models are binary; never apply text/EOL normalization
+*.onnx binary
+*.pickle binary

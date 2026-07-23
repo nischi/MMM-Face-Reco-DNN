@@ -10,21 +10,21 @@ This module works in the background, and so no screenshots are available.
 
 ## Dependencies
 
-- [OpenCV](#opencv)
-- [dlib](#dlib)
-- [face_recognition](#fr)
+Face detection and recognition are handled entirely by OpenCV's built-in DNN
+models — the **YuNet** detector and the **SFace** recognizer — so there is no
+longer any `dlib` / `face_recognition` to compile.
+
+- [OpenCV](#opencv) (YuNet + SFace, bundled in the `opencv-python` wheel)
 - [numpy](#numpy)
 - [picamera2](#picamera2)
 - [libcap-dev](#libcap-dev)
 
 ## Installation
 
-The installation is much more simplified now. You can run `npm ci` to install all the node packages and after that it will install all packages with pip. This can take a while to compile the whole opencv stuff.
-
-Be sure that your raspberry pi has enough cooling to do this job, it will be heavily used. It is also 
-likely necessary to increase the available SWAP space for opencv and dlib to succesfully compile. SWAP 
-can be increased by editing the file: `sudo nano /etc/dphys-swapfile` and changing
-the value of `CONF_SWAPSIZE`. 1024 MB was enough to work on a RPi 4 (i.e. `CONF_SWAPSIZE=1024`). 
+Installation is now lightweight: there is **nothing to compile**. Run `npm ci`
+to install the node packages, then install the Python dependencies below. On a
+Raspberry Pi these are plain pre-built wheels, so no SWAP increase is required
+and any NumPy version works (no pin).
 
 For the installation procedure to work, you first need the following installed beforehand system wide:
 
@@ -37,20 +37,39 @@ For the installation procedure to work, you first need the following installed b
 - libcap-dev
   - `sudo apt install libcap-dev`
 - install python dependencies
-  - If you working with Bookworm you need to create first an virtual environment, please have a look in the next chapter
-  - Numpy versions 2.0+ do not seem to work with this module
-  - `pip install face-recognition numpy==1.26.4 dlib picamera2 opencv-python`
+  - If you are working with Bookworm you need to create a virtual environment first, please have a look in the next chapter
+  - `pip install opencv-python numpy picamera2`
 
-### Some additional steps for Bookworm and above to run it with an virtual environment
+### Some additional steps for Bookworm and above to run it with a virtual environment
 
-If you want/need to install it with an virtual environment, you need to do following steps before you install the packages with pip
+`picamera2` relies on the system-wide `libcamera` bindings that are installed
+via apt and are not available from pip, so on Bookworm the virtual environment
+has to be allowed to see the system site-packages:
 
 - create environment with `python3 -m venv ~/python-facereco`
 - activate environment with `source ~/python-facereco/bin/activate`
-- install pip packages with `pip install face-recognition numpy==1.26.4 dlib picamera2 opencv-python`
-- Because some libraries uses global installed libs which are not available with pip, you need to change the config of your virtual environment
+- install pip packages with `pip install opencv-python numpy picamera2`
+- Because `picamera2` uses global installed libs which are not available with pip, you need to change the config of your virtual environment
   - `nano ~/python-facereco/pyvenv.cfg`
   - Change line `include-system-site-packages = false` to `include-system-site-packages = true`
+
+### Models
+
+The two OpenCV model files ship with the repository in the `model/` folder, so
+there is nothing extra to download:
+
+- `model/face_detection_yunet_2023mar.onnx` (YuNet face detector, ~230 KB)
+- `model/face_recognition_sface_2021dec.onnx` (SFace recognizer, ~37 MB)
+
+If you ever need to re-download them, they come from the
+[OpenCV Zoo](https://github.com/opencv/opencv_zoo):
+
+```sh
+curl -L -o model/face_detection_yunet_2023mar.onnx \
+  https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx
+curl -L -o model/face_recognition_sface_2021dec.onnx \
+  https://github.com/opencv/opencv_zoo/raw/main/models/face_recognition_sface/face_recognition_sface_2021dec.onnx
+```
 
 ## Install the Module
 
@@ -128,21 +147,18 @@ To setup the module in MagicMirror², add the following section to the `config.j
       everyoneClass: 'everyone',
       // Set of modules that are always shown - show if there is a face or no face detected
       alwaysClass: 'always',
-      // xml to recognize with haarcascade
-      cascade: 'modules/MMM-Face-Reco-DNN/model/haarcascade_frontalface_default.xml',
       // pre encoded pickle with the faces
       encodings: 'modules/MMM-Face-Reco-DNN/model/encodings.pickle',
+      // YuNet face detection ONNX model (ships in the model/ folder)
+      detModel: 'modules/MMM-Face-Reco-DNN/model/face_detection_yunet_2023mar.onnx',
+      // SFace face recognition ONNX model (ships in the model/ folder)
+      recModel: 'modules/MMM-Face-Reco-DNN/model/face_recognition_sface_2021dec.onnx',
       // Brightness (0-100)
       brightness: 0,
       // Contrast (0-127)
       contrast: 0,
       // Rotate camera image (-1 = no rotation, 0 = 90°, 1 = 180°, 2 = 270°)
       rotateCamera: -1,
-      // method of face recognition (dnn = deep neural network, haar = haarcascade)
-      method: 'dnn',
-      // which face detection model to use. "hog" is less accurate but faster on CPUs. "cnn" is a more accurate
-      // deep-learning model which is GPU/CUDA accelerated (if available). The default is "hog".
-      detectionMethod: 'hog',
       // how fast in ms should the modules hide and show (face effect)
       animationSpeed: 0,
       // Path to Python to run the face recognition (null / '' means default path, with Bookworm you need to set the virutal environment like /home/youruser/python-facereco/bin/python3. You can also find out the correct path if you are activated the virtual environment and run "which python3")
@@ -158,14 +174,20 @@ To setup the module in MagicMirror², add the following section to the `config.j
       extendDataset: false,
       // if extenDataset is set, you need to set the full path of the dataset
       dataset: 'modules/MMM-Face-Reco-DNN/dataset/',
-      // How much distance between faces to consider it a match. Lower is more strict.
-      tolerance: 0.6,
+      // Minimum SFace cosine similarity to consider a face a match. Higher is more strict.
+      // 0.363 is tuned on the LFW benchmark; raise it if you get false matches.
+      cosineThreshold: 0.363,
+      // Minimum YuNet detection confidence (0-1) to treat a region as a face.
+      // Lower this if faces are missed in poor lighting; raise it to reduce false detections.
+      detScoreThreshold: 0.9,
       // allow multiple concurrent user logins, 0=no, any other number is the maximum number of concurrent logins
       multiUser: 0,
       // resoltuion of the image
       resolution: [1920, 1080],
       // width of the image for processing
       processWidth: 500,
+      // camera back-end: 'picamera2' (Raspberry Pi) or 'webcam' (OpenCV VideoCapture, e.g. a laptop webcam for testing)
+      camera: 'picamera2',
       // output image on mm
       outputmm: 0,
       // turn on extra debugging 0=no, 1=yes
@@ -303,6 +325,45 @@ The state to class mappings are:
     classes: 'known'
 }
 ```
+
+## Development
+
+The face recognition logic has a small unit test suite (no camera or model
+files required). Install the dev dependencies and run it with:
+
+```sh
+pip install -r tools/requirements-dev.txt
+npm test        # runs: python -m pytest tools/tests
+```
+
+JavaScript is linted and formatted with ESLint / Prettier:
+
+```sh
+npm run lint
+npm run prettier
+```
+
+### Testing with a laptop / Mac webcam
+
+You do not need a Raspberry Pi to try the recognition out. `encode.py` only reads
+image files, so it runs anywhere, and `recognition.py` can use a regular webcam
+via OpenCV instead of `picamera2` by passing `--camera=webcam`:
+
+```sh
+# 1. build the encodings from your dataset/ folder (works on any machine)
+npm run encode
+
+# 2. run live recognition against the built-in webcam, showing a preview window
+python tools/recognition.py --camera=webcam --output=1 \
+  -e model/encodings.pickle \
+  -dm model/face_detection_yunet_2023mar.onnx \
+  -rm model/face_recognition_sface_2021dec.onnx
+```
+
+A window opens with a green box + name over each detected face; press `q` to quit.
+On macOS the first run asks for camera permission for your terminal
+(System Settings → Privacy & Security → Camera). Encoding on a laptop and copying
+the resulting `model/encodings.pickle` to the Pi is the recommended workflow.
 
 ## Known Issues
 

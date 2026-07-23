@@ -1,6 +1,5 @@
 import base64
 import cv2
-import face_recognition
 import numpy
 import os
 import pickle
@@ -12,7 +11,8 @@ from datetime import datetime
 from utils.image import Image
 from utils.arguments import Arguments
 from utils.print import Print
-from picamera2 import Picamera2
+from utils.recognizer import Recognizer
+from utils.camera import Camera
 
 def signalHandler(signal, frame):
     global closeSafe
@@ -28,9 +28,9 @@ def monitor_stdin_for_command():
     """
     Function for monitoring std input for commands to start or stop face recognition.
 
-    Note: Avoid putting print statements in this function, as will run asynchronously in 
+    Note: Avoid putting print statements in this function, as will run asynchronously in
     a thread. Print statements could get weaved in with other print statements, which may
-    break the parent Magic Mirror processes processing of this tool's std output. 
+    break the parent Magic Mirror processes processing of this tool's std output.
     """
     global external_trigger
     while True:
@@ -47,11 +47,20 @@ def monitor_stdin_for_command():
 # prepare console arguments
 Arguments.prepareRecognitionArguments()
 
-# load the known faces and embeddings along with OpenCV's Haar
-# cascade for face detection
+# load the known faces and embeddings along with OpenCV's YuNet face detector
+# and SFace face recognizer (both bundled with OpenCV's DNN module)
 Print.printJson("status", "loading encodings + face detector...")
 data = pickle.loads(open(Arguments.get("encodings"), "rb").read())
-detector = cv2.CascadeClassifier(Arguments.get("cascade"))
+detector = cv2.FaceDetectorYN.create(
+    Arguments.get("detModel"), "", (320, 320), float(Arguments.get("detScoreThreshold"))
+)
+recognizer = cv2.FaceRecognizerSF.create(Arguments.get("recModel"), "")
+
+# production similarity: SFace cosine similarity between the query feature and a
+# stored embedding (reshaped back to the (1, 128) form OpenCV expects).
+def sface_similarity(query_feature, known_encoding):
+    known = numpy.asarray(known_encoding, dtype=numpy.float32).reshape(1, -1)
+    return recognizer.match(query_feature, known, cv2.FaceRecognizerSF_FR_COSINE)
 
 # initialize the video stream
 Print.printJson("status", "starting video stream...")
@@ -61,9 +70,8 @@ resolution = (int(resolution[0]), int(resolution[1]))
 Print.printJson("status", resolution)
 Print.printJson("status", processWidth)
 
-picam2 = Picamera2()
-picam2.configure(picam2.create_preview_configuration(main={"size": (resolution[0], resolution[1]), "format": "XRGB8888"}))
-picam2.start()
+camera = Camera.create(Arguments.get("camera"), resolution)
+camera.start()
 
 
 # variable for prev names
@@ -77,7 +85,7 @@ if Arguments.get("extendDataset") is True:
     except:
         os.mkdir(unknownPath)
 
-tolerance = float(Arguments.get("tolerance"))
+cosineThreshold = float(Arguments.get("cosineThreshold"))
 
 # Default to running face recognition
 run_face_recognition = True
@@ -94,28 +102,32 @@ if Arguments.get("run_only_on_notification"):
 Print.printJson("status", "Starting face recognition loop.")
 while True:
     loop_start_time = time.time()
-    
+
     if Arguments.get("run_only_on_notification"):
         if run_face_recognition == False and external_trigger == True:
             # Externally triggered to run face recognition
             Print.printJson("status", "Starting face recognition.")
             run_face_recognition = True
-            picam2.start()
+            camera.start()
 
         elif run_face_recognition == True and external_trigger == False:
             # Externally triggered to stop face recognition.
             Print.printJson("status", "Stopping face recognition and logging out any logged in users.")
             run_face_recognition = False
-            picam2.stop()
-            
+            camera.stop()
+
             # Log out any users that were logged in, and clear prevNames list
             if prevNames:
                 Print.printJson("logout", {"names": prevNames})
                 prevNames.clear()
 
     if run_face_recognition:
-        # read the frame
-        originalFrame = picam2.capture_array()
+        # read the frame. picamera2 delivers XRGB8888 (4 channels); YuNet/SFace
+        # and JPEG saving all need 3-channel BGR, so drop the alpha/X channel up
+        # front and keep everything downstream 3-channel.
+        originalFrame = camera.capture_array()
+        if originalFrame.shape[2] == 4:
+            originalFrame = cv2.cvtColor(originalFrame, cv2.COLOR_BGRA2BGR)
 
         # adjust image brightness and contrast
         originalFrame = Image.adjust_brightness_contrast(
@@ -131,68 +143,44 @@ while True:
         else:
             frame = originalFrame
 
-        if Arguments.get("method") == "dnn":
-            # load the input image and convert it from BGR (OpenCV ordering)
-            # to dlib ordering (RGB)
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            # detect the (x, y)-coordinates of the bounding boxes
-            # corresponding to each face in the input image
-            boxes = face_recognition.face_locations(
-                rgb, model=Arguments.get("detectionMethod")
-            )
-        elif Arguments.get("method") == "haar":
-            # convert the input frame from (1) BGR to grayscale (for face
-            # detection) and (2) from BGR to RGB (for face recognition)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # detect faces with YuNet
+        (h, w) = frame.shape[:2]
+        detector.setInputSize((w, h))
+        _, faces = detector.detect(frame)
 
-            # detect faces in the grayscale frame
-            rects = detector.detectMultiScale(
-                gray,
-                scaleFactor=1.1,
-                minNeighbors=5,
-                minSize=(30, 30),
-                flags=cv2.CASCADE_SCALE_IMAGE,
-            )
+        # only build the on-frame overlay when we are actually displaying it,
+        # so the common MagicMirror path (output=0, outputmm=0) does no drawing
+        drawOverlay = Arguments.get("output") == 1 or Arguments.get("outputmm") == 1
 
-            # OpenCV returns bounding box coordinates in (x, y, w, h) order
-            # but we need them in (top, right, bottom, left) order, so we
-            # need to do a bit of reordering
-            boxes = [(y, x + w, y + h, x) for (x, y, w, h) in rects]
-
-        # compute the facial embeddings for each face bounding box
-        encodings = face_recognition.face_encodings(rgb, boxes)
         names = []
+        overlay = []  # (box, name, score) tuples, only filled when drawing
+        if faces is not None:
+            for face in faces:
+                # align + crop using YuNet's 5 landmarks, then embed with SFace
+                aligned = recognizer.alignCrop(frame, face)
+                encoding = recognizer.feature(aligned)
 
-        # loop over the facial embeddings
-        for encoding in encodings:
-            # compute distances between this encoding and the faces in dataset
-            distances = face_recognition.face_distance(data["encodings"], encoding)
+                # find the best matching known face (or "unknown")
+                name = Recognizer.best_match(
+                    encoding, data["encodings"], data["names"], cosineThreshold, sface_similarity
+                )
+                names.append(name)
 
-            minDistance = 1.0
-            if len(distances) > 0:
-                # the smallest distance is the closest to the encoding
-                minDistance = min(distances)
+                if drawOverlay:
+                    score = max(
+                        (sface_similarity(encoding, known) for known in data["encodings"]),
+                        default=0.0,
+                    )
+                    overlay.append((face[:4].astype(int), name, score))
 
-            # save the name if the distance is below the tolerance
-            if minDistance < tolerance:
-                idx = numpy.where(distances == minDistance)[0][0]
-                name = data["names"][idx]
-            else:
-                name = "unknown"
-
-            # update the list of names
-            names.append(name)
-
-        # loop over the recognized faces
-        for (top, right, bottom, left), name in zip(boxes, names):
-            # draw the predicted face name on the image
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-            y = top - 15 if top - 15 > 15 else top + 15
-            txt = name + " (" + "{:.2f}".format(minDistance) + ")"
-            cv2.putText(
-                frame, txt, (left, y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2
-            )
+        if drawOverlay:
+            for (x, y, bw, bh), name, score in overlay:
+                cv2.rectangle(frame, (x, y), (x + bw, y + bh), (0, 255, 0), 2)
+                ty = y - 15 if y - 15 > 15 else y + 15
+                txt = name + " (" + "{:.2f}".format(score) + ")"
+                cv2.putText(
+                    frame, txt, (x, ty), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2
+                )
 
         # display the image to our screen
         if Arguments.get("output") == 1:
@@ -203,35 +191,25 @@ while True:
             jpg_as_text = base64.b64encode(buffer).decode()
             Print.printJson("camera_image", {"image": jpg_as_text})
 
-        # update the FPS counter
-        # fps.update()
+        # figure out which names are new logins and which are new logouts
+        logins, logouts = Recognizer.diff_logins_logouts(prevNames, names)
 
-        logins = []
-        logouts = []
-        # Check which names are new login and which are new logout with prevNames
-        for n in names:
-            if prevNames.__contains__(n) == False and n is not None:
-                logins.append(n)
+        # if extendDataset is active we need to save the picture of each new login
+        if Arguments.get("extendDataset") is True:
+            for n in logins:
+                # set correct path to the dataset
+                path = os.path.dirname(Arguments.get("dataset") + "/" + n + "/")
+                today = datetime.now()
+                cv2.imwrite(
+                    path + "/" + n + "_" + today.strftime("%Y%m%d_%H%M%S") + ".jpg",
+                    originalFrame,
+                )
 
-                # if extendDataset is active we need to save the picture
-                if Arguments.get("extendDataset") is True:
-                    # set correct path to the dataset
-                    path = os.path.dirname(Arguments.get("dataset") + "/" + n + "/")
-
-                    today = datetime.now()
-                    cv2.imwrite(
-                        path + "/" + n + "_" + today.strftime("%Y%m%d_%H%M%S") + ".jpg",
-                        originalFrame,
-                    )
-        for n in prevNames:
-            if names.__contains__(n) == False and n is not None:
-                logouts.append(n)
-
-        # send inforrmation to prompt, only if something has changes
-        if logins.__len__() > 0:
+        # send information to prompt, only if something has changed
+        if len(logins) > 0:
             Print.printJson("login", {"names": logins})
 
-        if logouts.__len__() > 0:
+        if len(logouts) > 0:
             Print.printJson("logout", {"names": logouts})
 
         # set this names as new prev names for next iteration
@@ -241,13 +219,13 @@ while True:
     # if the `q` key was pressed, break from the loop
     if key == ord("q") or closeSafe == True:
         break
-    
-    # Calculate how long the loop ran thus far. If loop time was less than 
+
+    # Calculate how long the loop ran thus far. If loop time was less than
     # the specified interval, sleep more to meet the target interval
     loop_time = time.time() - loop_start_time
     time.sleep(max(0.0, Arguments.get("interval") / 1000 - loop_time))
 
 
 # do a bit of cleanup
-picam2.stop()
+camera.stop()
 cv2.destroyAllWindows()

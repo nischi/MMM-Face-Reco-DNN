@@ -25,25 +25,26 @@ class Arguments:
             help="path to serialized db of facial encodings",
         )
         ap.add_argument(
-            "-d",
-            "--detection-method",
+            "-dm",
+            "--detModel",
             type=str,
-            default="hog",
-            help="face detection model to use: either `hog` or `cnn`",
+            required=False,
+            default="../model/face_detection_yunet_2023mar.onnx",
+            help="path to the YuNet face detection ONNX model",
+        )
+        ap.add_argument(
+            "-rm",
+            "--recModel",
+            type=str,
+            required=False,
+            default="../model/face_recognition_sface_2021dec.onnx",
+            help="path to the SFace face recognition ONNX model",
         )
 
         Arguments.args = vars(ap.parse_args())
 
     def prepareRecognitionArguments():
         ap = argparse.ArgumentParser()
-        ap.add_argument(
-            "-c",
-            "--cascade",
-            type=str,
-            required=False,
-            default="../model/haarcascade_frontalface_default.xml",
-            help="path to where the face cascade resides",
-        )
         ap.add_argument(
             "-e",
             "--encodings",
@@ -53,28 +54,28 @@ class Arguments:
             help="path to serialized db of facial encodings",
         )
         ap.add_argument(
+            "-dm",
+            "--detModel",
+            type=str,
+            required=False,
+            default="../model/face_detection_yunet_2023mar.onnx",
+            help="path to the YuNet face detection ONNX model",
+        )
+        ap.add_argument(
+            "-rm",
+            "--recModel",
+            type=str,
+            required=False,
+            default="../model/face_recognition_sface_2021dec.onnx",
+            help="path to the SFace face recognition ONNX model",
+        )
+        ap.add_argument(
             "-r",
             "--rotateCamera",
             type=int,
             required=False,
             default=-1,
             help="Rotate camera image (-1 = no rotation, 0 = 90°, 1 = 180°, 2 = 270°)",
-        )
-        ap.add_argument(
-            "-m",
-            "--method",
-            type=str,
-            required=False,
-            default="dnn",
-            help="method to detect faces (dnn, haar)",
-        )
-        ap.add_argument(
-            "-d",
-            "--detectionMethod",
-            type=str,
-            required=False,
-            default="hog",
-            help="face detection model to use: either `hog` or `cnn`",
         )
         ap.add_argument(
             "-i",
@@ -111,12 +112,28 @@ class Arguments:
             help="path to input directory of faces + images",
         )
         ap.add_argument(
-            "-t",
-            "--tolerance",
+            "-ct",
+            "--cosineThreshold",
             type=float,
             required=False,
-            default=0.6,
-            help="How much distance between faces to consider it a match. Lower is more strict.",
+            default=0.363,
+            help="Minimum SFace cosine similarity to accept a match. Higher is more strict.",
+        )
+        ap.add_argument(
+            "-dst",
+            "--detScoreThreshold",
+            type=float,
+            required=False,
+            default=0.9,
+            help="Minimum YuNet detection confidence to treat a region as a face. Lower detects more faces in poor lighting.",
+        )
+        ap.add_argument(
+            "-cam",
+            "--camera",
+            type=str,
+            required=False,
+            default="picamera2",
+            help="Camera back-end: 'picamera2' (Raspberry Pi) or 'webcam' (OpenCV VideoCapture, e.g. a Mac/laptop webcam for testing).",
         )
         ap.add_argument(
             "-br",

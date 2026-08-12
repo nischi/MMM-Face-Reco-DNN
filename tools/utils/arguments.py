@@ -136,6 +136,14 @@ class Arguments:
             help="Camera back-end: 'picamera2' (Raspberry Pi) or 'webcam' (OpenCV VideoCapture, e.g. a Mac/laptop webcam for testing).",
         )
         ap.add_argument(
+            "-cd",
+            "--cameraDevice",
+            type=str,
+            required=False,
+            default="0",
+            help="Capture device for the 'webcam' back-end: an index (e.g. 0) or a path (e.g. /dev/video40). Ignored by picamera2.",
+        )
+        ap.add_argument(
             "-br",
             "--brightness",
             default=0,

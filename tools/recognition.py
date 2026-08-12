@@ -70,7 +70,7 @@ resolution = (int(resolution[0]), int(resolution[1]))
 Print.printJson("status", resolution)
 Print.printJson("status", processWidth)
 
-camera = Camera.create(Arguments.get("camera"), resolution)
+camera = Camera.create(Arguments.get("camera"), resolution, Arguments.get("cameraDevice"))
 
 # In motion-gate mode we boot paused (camera stopped) until a start command
 # arrives from the first motion wake; otherwise start the camera right away.

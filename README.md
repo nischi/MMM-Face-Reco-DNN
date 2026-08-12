@@ -218,6 +218,8 @@ To set up the module in MagicMirror², add the following section to the `config.
       processWidth: 500,
       // camera back-end: 'picamera2' (Raspberry Pi) or 'webcam' (OpenCV VideoCapture, e.g. a laptop webcam for testing)
       camera: 'picamera2',
+      // capture device for 'webcam': an index (0, 1, ...) or a path like '/dev/video40'
+      cameraDevice: 0,
       // output image on mm
       outputmm: 0,
       // turn on extra debugging 0=no, 1=yes

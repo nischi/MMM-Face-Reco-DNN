@@ -1,16 +1,29 @@
 import cv2
 
 
+def normalize_device(device):
+    """OpenCV accepts either an integer index or a device path. Command line
+    arguments always arrive as strings, so digit-only values become ints and
+    anything else (e.g. '/dev/video40') is passed through unchanged."""
+    if isinstance(device, int):
+        return device
+    text = str(device).strip()
+    if text.isdigit():
+        return int(text)
+    return text
+
+
 class Camera:
     """Camera abstraction so the same recognition loop can run on a Raspberry
     Pi camera (picamera2) or a regular webcam (OpenCV VideoCapture, e.g. for
-    testing on a laptop). Both back-ends expose the same tiny interface:
-    start(), stop() and capture_array() returning a BGR/BGRA frame."""
+    testing on a laptop, or a v4l2loopback virtual device). Both back-ends
+    expose the same tiny interface: start(), stop() and capture_array()
+    returning a BGR/BGRA frame."""
 
     @staticmethod
-    def create(kind, resolution):
+    def create(kind, resolution, device=0):
         if kind == "webcam":
-            return WebcamCamera(resolution)
+            return WebcamCamera(resolution, device)
         return PiCamera2Camera(resolution)
 
 
@@ -38,19 +51,22 @@ class PiCamera2Camera:
 
 
 class WebcamCamera:
-    def __init__(self, resolution):
+    def __init__(self, resolution, device=0):
         self.resolution = resolution
+        self.device = normalize_device(device)
         self.cap = None
 
     def start(self):
         if self.cap is None:
-            self.cap = cv2.VideoCapture(0)
+            self.cap = cv2.VideoCapture(self.device)
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.resolution[0])
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.resolution[1])
         if not self.cap.isOpened():
             raise RuntimeError(
-                "Could not open the webcam. On macOS grant camera access to your "
-                "terminal in System Settings > Privacy & Security > Camera."
+                "Could not open the webcam device {}. If this is a v4l2loopback "
+                "device, check that the broker is publishing to it. On macOS grant "
+                "camera access to your terminal in System Settings > Privacy & "
+                "Security > Camera.".format(self.device)
             )
 
     def stop(self):

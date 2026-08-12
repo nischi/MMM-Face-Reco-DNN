@@ -38,6 +38,7 @@ module.exports = NodeHelper.create({
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
         '--camera=' + this.config.camera,
+        '--cameraDevice=' + this.config.cameraDevice,
         '--run-only-on-notification=' + (this.config.external_trigger_notification !== '' || this.config.motionGate ? '1' : '0'),
         '--start-paused=' + (this.config.motionGate ? '1' : '0'),
       ],

@@ -1,3 +1,6 @@
+import numpy
+
+
 class Recognizer:
     """Pure, hardware-free helpers for the face recognition loop.
 
@@ -54,3 +57,31 @@ class Recognizer:
         logins = [n for n in names if n is not None and n not in prev_names]
         logouts = [n for n in prev_names if n is not None and n not in names]
         return logins, logouts
+
+    @staticmethod
+    def scale_detection(face, scale):
+        """Scale a YuNet detection from one frame's pixel space to another's.
+
+        A YuNet detection row is 15 floats: the bounding box (x, y, w, h),
+        5 facial landmarks as alternating x/y pairs (10 values), and a
+        detection score. The first 14 values are coordinates and scale
+        linearly with image size; the trailing score is a [0, 1] confidence
+        value and must be left untouched.
+
+        This is used to map a detection found on a cheap, downscaled frame
+        back into the full-resolution frame, so the recognition crop can be
+        taken from the sharp original instead of an upscaled, blurry one.
+
+        Args:
+            face: a single YuNet detection row (15 floats). Not mutated.
+            scale: factor to multiply the coordinate values by, e.g.
+                ``originalFrame.shape[1] / frame.shape[1]``.
+
+        Returns:
+            A new float32 array (the dtype cv2.FaceDetectorYN.detect
+            naturally produces, and what FaceRecognizerSF.alignCrop expects)
+            with the coordinates scaled and the score unchanged.
+        """
+        scaled = numpy.array(face, dtype=numpy.float32, copy=True)
+        scaled[:14] *= scale
+        return scaled

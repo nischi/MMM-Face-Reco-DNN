@@ -157,6 +157,15 @@ while True:
         detector.setInputSize((w, h))
         _, faces = detector.detect(frame)
 
+        # detection runs on the (possibly downscaled) frame, but SFace's aligned
+        # crop is a fixed ~112x112 pixels -- cropping that from a small frame means
+        # upscaling with no real detail. Scale each detection back into
+        # originalFrame's coordinates so the recognition crop comes from the
+        # sharp, full-resolution image instead. Derived from actual frame widths
+        # (not from config) so this is correct regardless of how processWidth is
+        # set; when no downscaling happened this factor is exactly 1.0.
+        toOriginalScale = originalFrame.shape[1] / frame.shape[1]
+
         # only build the on-frame overlay when we are actually displaying it,
         # so the common MagicMirror path (output=0, outputmm=0) does no drawing
         drawOverlay = Arguments.get("output") == 1 or Arguments.get("outputmm") == 1
@@ -165,8 +174,11 @@ while True:
         overlay = []  # (box, name, score) tuples, only filled when drawing
         if faces is not None:
             for face in faces:
-                # align + crop using YuNet's 5 landmarks, then embed with SFace
-                aligned = recognizer.alignCrop(frame, face)
+                # align + crop using YuNet's 5 landmarks, then embed with SFace.
+                # The crop is taken from originalFrame (full resolution); the
+                # overlay below still uses the small-frame `face` coordinates.
+                originalFace = Recognizer.scale_detection(face, toOriginalScale)
+                aligned = recognizer.alignCrop(originalFrame, originalFace)
                 encoding = recognizer.feature(aligned)
 
                 # find the best matching known face (or "unknown")

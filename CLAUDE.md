@@ -17,12 +17,12 @@ The system is split across two runtimes that communicate over a JSON pipe:
 npm ci                 # install node deps, then pip-installs the python deps (see README)
 npm run lint           # eslint over all JS
 npm run prettier       # format all JS in place
-npm test               # node --test (motiongate.js) + python -m pytest tools/tests
+npm test               # node --test test/*.test.js + python -m pytest tools/tests
 npm run encode         # build model/encodings.pickle from the dataset/ folder
 npm run recognition    # run the recognition loop standalone (for debugging outside MM)
 ```
 
-Unit tests cover the pure logic with no camera/models: Python (`tools/tests/`) for recognition, image utils, and the encodings pickle format; JS (`test/motiongate.test.js`, `node --test`) for the motion-gate decision. The rest (camera capture, live recognition, MM integration) is still verified manually. Run a single test with `pytest tools/tests/test_recognizer.py -k best_match` or `node --test test/motiongate.test.js`.
+Unit tests cover the pure logic with no camera/models: Python (`tools/tests/`) for recognition, image utils, and the encodings pickle format; JS for the motion-gate decision (`test/motiongate.test.js`), the python restart policy (`test/restartpolicy.test.js`), the node helper's process supervision (`test/node_helper.test.js`) and the browser module's restart resync (`test/module.test.js`). The last two load the real sources against the stubs in `test/harness.js` (a fake `PythonShell`, the MagicMirror globals, deterministic timers) — support files there are not `*.test.js`, so the `test/*.test.js` runner glob skips them. The rest (camera capture, live recognition, MM integration) is still verified manually. Run a single test with `pytest tools/tests/test_recognizer.py -k best_match` or `node --test test/motiongate.test.js`.
 
 Node version is pinned to **20.5** (`.nvmrc`). Any NumPy version works — the old `numpy<2` pin was a `dlib` constraint and is gone.
 
@@ -41,6 +41,8 @@ python tools/recognition.py -e model/encodings.pickle -dm model/face_detection_y
 3. The Python loop grabs camera frames (`picamera2`), detects + recognizes faces, and emits newline-delimited JSON objects on stdout (`utils/print.py` → `Print.printJson`). Keys it emits: `status`, `login`, `logout`, `camera_image`.
 4. `node_helper.js` reads those messages and forwards `login`/`logout` to the browser module as a `user` socket notification (and `camera_image` if `outputmm` is on).
 5. `MMM-Face-Reco-DNN.js` turns those into MagicMirror notifications (`USERS_LOGIN`, `USERS_LOGOUT`, `USERS_LOGOUT_MODULES`) and, more importantly, shows/hides modules.
+
+The Python process is **supervised**: `node_helper.js` listens for `error`/`close`, and `restartpolicy.js` (pure, `node --test`ed) decides whether to respawn. The budget is a rate — at most `MAX_RESTARTS_PER_WINDOW` restarts per `RESTART_WINDOW_MS`; once it is spent the helper waits out the window instead of spinning, so a camera outage never disables recognition permanently. A respawn sends `PYTHON_RESTARTED` to the browser module, which resets its motion-gate state (the fresh process boots paused again) and re-sends `start` if recognition should be running. Stdout is parsed with a tolerant parser, because a process dying mid-write leaves a torn JSON line that a bare `JSON.parse` would throw out of a stream handler, killing MagicMirror.
 
 Communication is **bidirectional**: `node_helper.js` can write `start`/`stop`/`exit` commands to the Python process's stdin. Python's `monitor_stdin_for_command()` thread reads these to pause/resume recognition. Two features drive this: the `external_trigger_notification` config (recognition runs while that MM notification's payload is `true`, e.g. pause when the screen is off), and the **motion gate** (below). Either enables `--run-only-on-notification`; the gate additionally passes `--start-paused=1` so Python boots paused.
 

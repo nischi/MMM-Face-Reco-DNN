@@ -12,25 +12,26 @@ const { PythonShell } = require('python-shell');
 const onExit = require('signal-exit');
 const RestartPolicy = require('./restartpolicy.js');
 
-// Supervision constants (delay, budget, healthy-run threshold) live with the
-// pure decision logic in restartpolicy.js so both sides agree on them.
-const MAX_RESTART_ATTEMPTS = RestartPolicy.MAX_RESTART_ATTEMPTS;
-const HEALTHY_RUN_MS = RestartPolicy.HEALTHY_RUN_MS;
+// Supervision constants (delay, rate budget, healthy-run threshold) live with
+// the pure decision logic in restartpolicy.js so both sides agree on them.
+const MAX_RESTARTS_PER_WINDOW = RestartPolicy.MAX_RESTARTS_PER_WINDOW;
+const RESTART_WINDOW_MS = RestartPolicy.RESTART_WINDOW_MS;
 
-// Module level, because only one python recognition process (one camera) may
-// run per MagicMirror server, no matter how many module instances there are.
-// `pythonOwner` records which instance spawned it, so only that instance
-// supervises/restarts it.
+// Only one python recognition process (one camera) may run per MagicMirror
+// server. MagicMirror keys node helpers by module name and therefore creates a
+// single instance of this helper, so the flag is really instance state; it is
+// kept at module level to stay correct even if that ever changed.
 var pythonStarted = false;
-var pythonOwner = null;
 
 module.exports = NodeHelper.create({
   pyshell: null,
   // true while we are deliberately terminating python (stop/shutdown), so the
   // resulting exit is not mistaken for a crash.
   stopping: false,
-  // consecutive restart attempts; reset once a process ran healthily.
+  // restarts performed inside the current rolling window, and the timestamp at
+  // which that window started (see restartpolicy.js).
   restartAttempts: 0,
+  restartWindowStart: 0,
   restartTimer: null,
   exitHookRegistered: false,
 
@@ -40,6 +41,10 @@ module.exports = NodeHelper.create({
     const options = {
       mode: 'json',
       pythonOptions: ['-u'], // Immediately flush buffer for std out/in monitoring/writing to work
+      // mode 'json' would parse stdout with a bare JSON.parse; use a tolerant
+      // parser instead (see parse_python_line). Outgoing messages keep the json
+      // formatter that `mode` selects.
+      parser: line => self.parse_python_line(line),
       stderrParser: line => JSON.stringify(line),
       args: [
         '--encodings=' + this.config.encodings,
@@ -89,6 +94,11 @@ module.exports = NodeHelper.create({
 
     // check if a message of the python script is comming in
     shell.on('message', function (message) {
+      // Lines the tolerant parser could not read arrive as undefined.
+      if (message == null || typeof message !== 'object') {
+        return;
+      }
+
       // A status message has received and will log
       if (Object.prototype.hasOwnProperty.call(message, 'status')) {
         console.log('[' + self.name + '] ' + message.status);
@@ -148,6 +158,26 @@ module.exports = NodeHelper.create({
     }
   },
 
+  // python-shell hands us stdout one line at a time. When the python process
+  // dies mid-write, NewlineTransformer._flush pushes the torn remainder of the
+  // last line, and the built-in json parser throws that SyntaxError right out
+  // of a stream 'data' handler - uncatchable from here, and fatal for the whole
+  // MagicMirror process. So parse defensively and drop what we cannot read;
+  // well formed lines are returned exactly as JSON.parse would.
+  parse_python_line: function (line) {
+    if (typeof line !== 'string' || line.trim() === '') {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(line);
+    } catch (err) {
+      const preview = line.length > 200 ? line.slice(0, 200) + '...' : line;
+      console.log('[' + this.name + '] ' + 'Ignoring unreadable line from python (' + (err && err.message ? err.message : err) + '): ' + preview);
+      return undefined;
+    }
+  },
+
   exit_description: function (shell) {
     if (!shell) {
       return 'unknown';
@@ -168,7 +198,8 @@ module.exports = NodeHelper.create({
       return;
     }
 
-    const ranForMs = Date.now() - startedAt;
+    const now = Date.now();
+    const ranForMs = now - startedAt;
     this.pyshell = null;
 
     if (this.stopping) {
@@ -177,39 +208,51 @@ module.exports = NodeHelper.create({
       console.log('[' + this.name + '] ' + 'Python process died unexpectedly after ' + Math.round(ranForMs / 1000) + 's (' + reason + ').');
     }
 
-    // No python process is running any more: release the module level guard so
-    // a restart (or a fresh CONFIG after a browser reload) can start one.
-    if (pythonOwner === this) {
-      pythonStarted = false;
-      pythonOwner = null;
-    }
+    // No python process is running any more: release the guard so a restart (or
+    // a fresh CONFIG after a browser reload) can start one.
+    pythonStarted = false;
 
     const decision = RestartPolicy.decideRestart({
       intentional: this.stopping,
+      now: now,
       attempts: this.restartAttempts,
+      windowStart: this.restartWindowStart,
       ranForMs: ranForMs,
     });
     this.restartAttempts = decision.attempts;
+    this.restartWindowStart = decision.windowStart;
 
     if (decision.action === 'none') {
       return;
     }
 
-    if (decision.action === 'give-up') {
+    if (decision.throttled) {
       console.log(
         '[' +
           this.name +
           '] ' +
-          'Python process failed ' +
-          MAX_RESTART_ATTEMPTS +
-          ' times in a row without staying alive for ' +
-          Math.round(HEALTHY_RUN_MS / 1000) +
-          's. Giving up: face recognition is DISABLED until MagicMirror is restarted.',
+          'Python failed ' +
+          MAX_RESTARTS_PER_WINDOW +
+          ' times within ' +
+          Math.round(RESTART_WINDOW_MS / 60000) +
+          ' minutes. Backing off for ' +
+          Math.round(decision.delayMs / 1000) +
+          's, then trying again with a fresh budget.',
       );
-      return;
+    } else {
+      console.log(
+        '[' +
+          this.name +
+          '] ' +
+          'Restarting python in ' +
+          Math.round(decision.delayMs / 1000) +
+          's (restart ' +
+          decision.attempts +
+          '/' +
+          MAX_RESTARTS_PER_WINDOW +
+          ' in this window).',
+      );
     }
-
-    console.log('[' + this.name + '] ' + 'Restarting python in ' + Math.round(decision.delayMs / 1000) + 's (attempt ' + decision.attempts + '/' + MAX_RESTART_ATTEMPTS + ').');
 
     this.clear_restart_timer();
     this.restartTimer = setTimeout(function () {
@@ -224,9 +267,18 @@ module.exports = NodeHelper.create({
         return;
       }
       pythonStarted = true;
-      pythonOwner = self;
       console.log('[' + self.name + '] ' + 'Restarting python recognition process...');
-      self.python_start();
+      try {
+        self.python_start();
+      } catch (err) {
+        pythonStarted = false;
+        console.log('[' + self.name + '] ' + 'Could not restart python: ' + (err && err.message ? err.message : err));
+        return;
+      }
+      // The fresh process boots with the same --start-paused flags as the very
+      // first one, so tell the browser module to resynchronise its motion gate
+      // instead of assuming its old running/paused state still holds.
+      self.sendSocketNotification('PYTHON_RESTARTED', {});
     }, decision.delayMs);
 
     if (this.restartTimer.unref) {
@@ -304,8 +356,11 @@ module.exports = NodeHelper.create({
       this.config.output = 0;
       if (!pythonStarted) {
         pythonStarted = true;
-        pythonOwner = this;
+        // A CONFIG means the browser (re)loaded and explicitly asks for a
+        // process: drop any pending restart and start from a clean budget.
         this.clear_restart_timer();
+        this.restartAttempts = 0;
+        this.restartWindowStart = 0;
         this.python_start();
       }
     }
@@ -329,9 +384,6 @@ module.exports = NodeHelper.create({
   stop: function () {
     this.stopping = true;
     this.clear_restart_timer();
-    if (pythonOwner === this) {
-      pythonOwner = null;
-    }
     pythonStarted = false;
     this.python_stop();
   },

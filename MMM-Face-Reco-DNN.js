@@ -160,6 +160,24 @@ Module.register('MMM-Face-Reco-DNN', {
     }
   },
 
+  // ----------------------------------------------------------------------------------------------------
+  // The node helper respawned the python process after it died. The fresh
+  // process starts paused whenever the motion gate is on (--start-paused), so
+  // our idea of what python is doing is stale: reset it and let the gate decide
+  // again. Without this the gate would still believe recognition is running and
+  // never re-send 'start', leaving recognition dead until motion cycled.
+  pythonRestarted: function () {
+    Log.log(this.name + ' python recognition process restarted, resyncing motion gate.');
+
+    if (!this.config.motionGate) {
+      return;
+    }
+
+    this.clearMotionPauseTimer();
+    this.motionRunning = false;
+    this.applyMotionGate();
+  },
+
   clearMotionPauseTimer: function () {
     if (this.motionPauseTimer != null) {
       clearTimeout(this.motionPauseTimer);
@@ -455,8 +473,10 @@ Module.register('MMM-Face-Reco-DNN', {
   },
   // ----------------------------------------------------------------------------------------------------
   socketNotificationReceived: function (notification, payload) {
-    var self = this;
-    var user;
+    if (notification === 'PYTHON_RESTARTED') {
+      this.pythonRestarted();
+      return;
+    }
 
     if (notification === 'camera_image') {
       this.image = payload.image;
@@ -465,69 +485,84 @@ Module.register('MMM-Face-Reco-DNN', {
 
     // somebody has logged in
     if (payload.action === 'login') {
-      var loginCount = 0;
-      for (user of payload.users) {
-        if (user != null) {
-          // if there are currently no users logged in OR we allow multiple users
-          this.config.debug && Log.log('Number of logged in users:' + this.users.length + ', Allowed Number of Users:' + this.config.multiUser);
-          if (this.users.length === 0 || this.users.length < this.config.multiUser) {
-            // check if the user is already logged in
-            if (!this.users.includes(user)) {
-              // run the login procedure
-              this.login_user(user);
-              // increment the counter
-              loginCount++;
-            } else {
-              this.config.debug && Log.log('Detected ' + user + ' again.');
-            }
-          } else {
-            this.config.debug &&
-              Log.log(
-                'Detected a login event for ' + user + ' but multiple concurrent logins is limited to ' + this.config.multiUser + ' and ' + this.users + ' is already logged in.',
-              );
-          }
-
-          // clear any timeouts the user might have so that they stay logged in
-          if (this.timouts[user] != null) {
-            this.config.debug && Log.log('Clearing timeouts for ' + user);
-            this.config.debug && Log.log('Remaining timeouts BEFORE:');
-            this.config.debug && Log.log(this.timouts);
-            clearTimeout(this.timouts[user]);
-            this.config.debug && Log.log('Remaining timeouts AFTER:');
-            this.config.debug && Log.log(this.timouts);
-          }
-        }
-      }
-
-      if (loginCount > 0) {
-        // We still need to broadcast MM notification for backward compatability.
-        this.config.debug && Log.log('Detected ' + loginCount + ' logins.');
-        this.sendNotification('USERS_LOGIN', payload.users);
-      }
+      this.handle_login(payload);
     } else if (payload.action === 'logout') {
-      var logoutCount = 0;
-      for (user of payload.users) {
-        if (user != null) {
-          // see if user is even logged in, since you can only log out if you are actually logged in
-          if (this.users.includes(user)) {
-            this.config.debug && Log.log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
-            this.timouts[user] = setTimeout(function () {
-              // Broadcast notificaiton that we are about to hide modules.
-              // Ideally this would be USERS_LOGOUT to be consistent with hide/show timer, but to prevent regression using a new type.
-              self.sendNotification('USERS_LOGOUT_MODULES', user);
-              self.logout_user(user);
-              logoutCount++;
-            }, this.config.logoutDelay);
+      this.handle_logout(payload);
+    }
+  },
+
+  // ----------------------------------------------------------------------------------------------------
+  handle_login: function (payload) {
+    var user;
+    var loginCount = 0;
+
+    for (user of payload.users) {
+      if (user != null) {
+        // if there are currently no users logged in OR we allow multiple users
+        this.config.debug && Log.log('Number of logged in users:' + this.users.length + ', Allowed Number of Users:' + this.config.multiUser);
+        if (this.users.length === 0 || this.users.length < this.config.multiUser) {
+          // check if the user is already logged in
+          if (!this.users.includes(user)) {
+            // run the login procedure
+            this.login_user(user);
+            // increment the counter
+            loginCount++;
           } else {
-            this.config.debug && Log.log('Detected a logout event for ' + user + ' but they were not logged in.');
+            this.config.debug && Log.log('Detected ' + user + ' again.');
           }
+        } else {
+          this.config.debug &&
+            Log.log(
+              'Detected a login event for ' + user + ' but multiple concurrent logins is limited to ' + this.config.multiUser + ' and ' + this.users + ' is already logged in.',
+            );
+        }
+
+        // clear any timeouts the user might have so that they stay logged in
+        if (this.timouts[user] != null) {
+          this.config.debug && Log.log('Clearing timeouts for ' + user);
+          this.config.debug && Log.log('Remaining timeouts BEFORE:');
+          this.config.debug && Log.log(this.timouts);
+          clearTimeout(this.timouts[user]);
+          this.config.debug && Log.log('Remaining timeouts AFTER:');
+          this.config.debug && Log.log(this.timouts);
         }
       }
+    }
 
-      if (logoutCount > 0) {
-        this.config.debug && Log.log('Detected ' + logoutCount + ' logouts.');
-        this.sendNotification('USERS_LOGOUT', payload.users);
+    if (loginCount > 0) {
+      // We still need to broadcast MM notification for backward compatability.
+      this.config.debug && Log.log('Detected ' + loginCount + ' logins.');
+      this.sendNotification('USERS_LOGIN', payload.users);
+    }
+  },
+
+  // ----------------------------------------------------------------------------------------------------
+  handle_logout: function (payload) {
+    var self = this;
+    var user;
+    var logoutCount = 0;
+
+    for (user of payload.users) {
+      if (user != null) {
+        // see if user is even logged in, since you can only log out if you are actually logged in
+        if (this.users.includes(user)) {
+          this.config.debug && Log.log('Setting logout timer for ' + user + ' for ' + this.config.logoutDelay + 'ms');
+          this.timouts[user] = setTimeout(function () {
+            // Broadcast notificaiton that we are about to hide modules.
+            // Ideally this would be USERS_LOGOUT to be consistent with hide/show timer, but to prevent regression using a new type.
+            self.sendNotification('USERS_LOGOUT_MODULES', user);
+            self.logout_user(user);
+            logoutCount++;
+          }, this.config.logoutDelay);
+        } else {
+          this.config.debug && Log.log('Detected a logout event for ' + user + ' but they were not logged in.');
+        }
       }
+    }
+
+    if (logoutCount > 0) {
+      this.config.debug && Log.log('Detected ' + logoutCount + ' logouts.');
+      this.sendNotification('USERS_LOGOUT', payload.users);
     }
   },
 

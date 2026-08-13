@@ -122,3 +122,11 @@ dataset/*
 
 # node_modules
 node_modules
+dataset-originals/
+.facetool/
+
+# macOS
+.DS_Store
+
+# local Claude Code config and skills
+.claude/

@@ -33,9 +33,10 @@ def test_best_match_returns_name_above_threshold():
     known_names = ["thierry", "james"]
     query = [0.99, 0.01]  # very close to thierry
 
-    result = Recognizer.best_match(query, known_encodings, known_names, 0.5, cosine)
+    name, score = Recognizer.best_match(query, known_encodings, known_names, 0.5, cosine)
 
-    assert result == "thierry"
+    assert name == "thierry"
+    assert score == pytest.approx(0.9999, abs=1e-3)
 
 
 def test_best_match_returns_unknown_below_threshold():
@@ -43,15 +44,34 @@ def test_best_match_returns_unknown_below_threshold():
     known_names = ["thierry"]
     query = [0.0, 1.0]  # orthogonal -> cosine 0.0
 
-    result = Recognizer.best_match(query, known_encodings, known_names, 0.363, cosine)
+    name, _ = Recognizer.best_match(query, known_encodings, known_names, 0.363, cosine)
 
-    assert result == "unknown"
+    assert name == "unknown"
+
+
+def test_best_match_reports_the_score_it_rejected():
+    """A rejected match still reports how close it got.
+
+    This is the whole point of returning the score: an "unknown" that scored
+    0.35 means the threshold or the enrolled photos need work, while one that
+    scored 0.02 means the crop itself is wrong. Without the number the two are
+    indistinguishable in the logs.
+    """
+    known_encodings = [[1.0, 0.0]]
+    known_names = ["thierry"]
+    query = [0.94, 0.34]  # cosine ~0.94, but we demand near-perfection
+
+    name, score = Recognizer.best_match(query, known_encodings, known_names, 0.99, cosine)
+
+    assert name == "unknown"
+    assert score == pytest.approx(0.94, abs=1e-2)
 
 
 def test_best_match_empty_dataset_is_unknown():
-    result = Recognizer.best_match([1.0, 0.0], [], [], 0.363, cosine)
+    name, score = Recognizer.best_match([1.0, 0.0], [], [], 0.363, cosine)
 
-    assert result == "unknown"
+    assert name == "unknown"
+    assert score == 0.0
 
 
 def test_best_match_picks_closest_of_several():
@@ -59,16 +79,67 @@ def test_best_match_picks_closest_of_several():
     known_names = ["far", "closest", "orthogonal"]
     query = [0.9, 0.1]
 
-    result = Recognizer.best_match(query, known_encodings, known_names, 0.5, cosine)
+    name, score = Recognizer.best_match(query, known_encodings, known_names, 0.5, cosine)
 
-    assert result == "closest"
+    assert name == "closest"
+    assert score == pytest.approx(1.0, abs=1e-6)
 
 
 def test_best_match_accepts_score_exactly_at_threshold():
     # cosine of identical vectors is exactly 1.0
-    result = Recognizer.best_match([1.0, 0.0], [[1.0, 0.0]], ["thierry"], 1.0, cosine)
+    name, score = Recognizer.best_match([1.0, 0.0], [[1.0, 0.0]], ["thierry"], 1.0, cosine)
 
-    assert result == "thierry"
+    assert name == "thierry"
+    assert score == pytest.approx(1.0, abs=1e-6)
+
+
+def test_best_match_reports_the_highest_score_not_the_first_over_threshold():
+    """The reported score must be the best one, even when a weaker match came first."""
+    known_encodings = [[0.8, 0.6], [1.0, 0.0]]
+    known_names = ["weaker", "stronger"]
+
+    name, score = Recognizer.best_match([1.0, 0.0], known_encodings, known_names, 0.5, cosine)
+
+    assert name == "stronger"
+    assert score == pytest.approx(1.0, abs=1e-6)
+
+
+# ----------------------------------------------------------------------------
+# split_by_detection_score
+# ----------------------------------------------------------------------------
+def row(score):
+    """A YuNet detection row: 4 box + 10 landmark values, score last."""
+    return numpy.array([0.0] * 14 + [score], dtype=numpy.float32)
+
+
+def test_split_accepts_at_and_above_threshold():
+    accepted, rejected = Recognizer.split_by_detection_score(
+        [row(0.95), row(0.80), row(0.79)], 0.80
+    )
+
+    assert [float(f[-1]) for f in accepted] == pytest.approx([0.95, 0.80])
+    assert [float(f[-1]) for f in rejected] == pytest.approx([0.79])
+
+
+def test_split_handles_no_detections():
+    """YuNet returns None, not an empty array, when it finds nothing."""
+    accepted, rejected = Recognizer.split_by_detection_score(None, 0.8)
+
+    assert accepted == []
+    assert rejected == []
+
+
+def test_split_keeps_near_misses_so_the_threshold_can_be_tuned():
+    """The rejected list is the whole point: it is what makes the cut visible.
+
+    A bowl on a kitchen counter detected at 0.60 and a real face detected at
+    0.78 both fail a 0.80 threshold, and only the logged score tells them
+    apart. Dropping them inside OpenCV would make the threshold untunable.
+    """
+    accepted, rejected = Recognizer.split_by_detection_score([row(0.60), row(0.78)], 0.80)
+
+    assert accepted == []
+    assert [float(f[-1]) for f in rejected] == pytest.approx([0.60, 0.78])
 
 
 # ----------------------------------------------------------------------------

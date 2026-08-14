@@ -51,8 +51,16 @@ Arguments.prepareRecognitionArguments()
 # and SFace face recognizer (both bundled with OpenCV's DNN module)
 Print.printJson("status", "loading encodings + face detector...")
 data = pickle.loads(open(Arguments.get("encodings"), "rb").read())
+detScoreThreshold = float(Arguments.get("detScoreThreshold"))
+
+# Create the detector with a floor *below* the operating threshold and apply the
+# real cut ourselves, so near-misses survive long enough to be logged. Whatever
+# OpenCV drops internally is invisible forever, and detScoreThreshold is exactly
+# the knob that needs real numbers to be set sensibly. Rejected faces are never
+# embedded, so the only cost is a few more candidate boxes out of NMS.
+DETECTION_FLOOR = 0.5
 detector = cv2.FaceDetectorYN.create(
-    Arguments.get("detModel"), "", (320, 320), float(Arguments.get("detScoreThreshold"))
+    Arguments.get("detModel"), "", (320, 320), min(DETECTION_FLOOR, detScoreThreshold)
 )
 recognizer = cv2.FaceRecognizerSF.create(Arguments.get("recModel"), "")
 
@@ -170,29 +178,59 @@ while True:
         # so the common MagicMirror path (output=0, outputmm=0) does no drawing
         drawOverlay = Arguments.get("output") == 1 or Arguments.get("outputmm") == 1
 
+        # Apply the detection threshold here rather than inside OpenCV, so the
+        # faces that just missed the cut can still be reported below.
+        faces, rejectedFaces = Recognizer.split_by_detection_score(faces, detScoreThreshold)
+
         names = []
         overlay = []  # (box, name, score) tuples, only filled when drawing
-        if faces is not None:
-            for face in faces:
-                # align + crop using YuNet's 5 landmarks, then embed with SFace.
-                # The crop is taken from originalFrame (full resolution); the
-                # overlay below still uses the small-frame `face` coordinates.
-                originalFace = Recognizer.scale_detection(face, toOriginalScale)
-                aligned = recognizer.alignCrop(originalFrame, originalFace)
-                encoding = recognizer.feature(aligned)
+        diagnostics = []  # one "name score=... det=... size=..." per detected face
+        for face in faces:
+            # align + crop using YuNet's 5 landmarks, then embed with SFace.
+            # The crop is taken from originalFrame (full resolution); the
+            # overlay below still uses the small-frame `face` coordinates.
+            originalFace = Recognizer.scale_detection(face, toOriginalScale)
+            aligned = recognizer.alignCrop(originalFrame, originalFace)
+            encoding = recognizer.feature(aligned)
 
-                # find the best matching known face (or "unknown")
-                name = Recognizer.best_match(
-                    encoding, data["encodings"], data["names"], cosineThreshold, sface_similarity
+            # find the best matching known face (or "unknown"), keeping the
+            # similarity score so the log below can say how close it got
+            name, score = Recognizer.best_match(
+                encoding, data["encodings"], data["names"], cosineThreshold, sface_similarity
+            )
+            names.append(name)
+
+            # Record why this face resolved the way it did. "unknown" on its
+            # own is unactionable: a face that scored 0.35 against a 0.363
+            # threshold is a tuning problem, one that scored 0.05 is a broken
+            # crop, and one detected 40 pixels wide is simply too far away.
+            # The face box is in originalFrame pixels, so the size here is
+            # comparable across processWidth settings.
+            diagnostics.append(
+                "{} score={:.3f} det={:.2f} size={:.0f}x{:.0f}".format(
+                    name, score, originalFace[14], originalFace[2], originalFace[3]
                 )
-                names.append(name)
+            )
 
-                if drawOverlay:
-                    score = max(
-                        (sface_similarity(encoding, known) for known in data["encodings"]),
-                        default=0.0,
-                    )
-                    overlay.append((face[:4].astype(int), name, score))
+            if drawOverlay:
+                overlay.append((face[:4].astype(int), name, score))
+
+        # Report what the detector turned down too, so the threshold can be read
+        # off real numbers instead of guessed. These were never embedded, hence
+        # no identity score.
+        for face in rejectedFaces:
+            rejected = Recognizer.scale_detection(face, toOriginalScale)
+            diagnostics.append(
+                "below-threshold det={:.2f} size={:.0f}x{:.0f}".format(
+                    rejected[14], rejected[2], rejected[3]
+                )
+            )
+
+        # Emit one line per cycle that saw anything face-shaped. Nothing is
+        # logged while the frame is empty, so at the motion gate's duty cycle
+        # this stays quiet.
+        if diagnostics:
+            Print.printJson("status", "faces: " + " | ".join(diagnostics))
 
         if drawOverlay:
             for (x, y, bw, bh), name, score in overlay:

@@ -13,11 +13,18 @@ class Recognizer:
 
     @staticmethod
     def best_match(feature, known_encodings, known_names, threshold, similarity_fn):
-        """Return the best matching name for a face embedding, or "unknown".
+        """Return the best matching name for a face embedding, plus its score.
 
         SFace matches on cosine similarity where a higher score means a more
         similar face, so we keep the largest score and only accept it when it
         is at or above ``threshold``.
+
+        The score is returned even when the match is rejected, because that
+        number is the only way to tell the two failure modes apart from the
+        outside: an "unknown" that scored just under the threshold means the
+        threshold or the enrolled photos need work, while one that scored near
+        zero means the aligned crop never resembled a face at all. Callers log
+        it; without it every rejection looks identical.
 
         Args:
             feature: the query face embedding.
@@ -29,18 +36,23 @@ class Recognizer:
                 cosine distance type; in tests it is a plain cosine function.
 
         Returns:
-            The matched name, or "unknown" if no stored face is similar enough.
+            ``(name, score)`` where name is the matched name or "unknown", and
+            score is the highest similarity found against any stored face (0.0
+            for an empty dataset).
         """
         best_name = "unknown"
-        best_score = threshold
+        best_score = 0.0
 
         for encoding, name in zip(known_encodings, known_names):
             score = similarity_fn(feature, encoding)
-            if score >= best_score:
+            if score > best_score:
                 best_score = score
                 best_name = name
 
-        return best_name
+        if best_score < threshold:
+            return "unknown", best_score
+
+        return best_name, best_score
 
     @staticmethod
     def diff_logins_logouts(prev_names, names):
@@ -57,6 +69,38 @@ class Recognizer:
         logins = [n for n in names if n is not None and n not in prev_names]
         logouts = [n for n in prev_names if n is not None and n not in names]
         return logins, logouts
+
+    @staticmethod
+    def split_by_detection_score(faces, threshold):
+        """Split YuNet detections into those we trust and those we only log.
+
+        The detector is deliberately created with a floor *below* the operating
+        threshold so the near-misses still come back, because a threshold you
+        cannot see under is a threshold you cannot tune: if every detection
+        below the cut is discarded inside OpenCV, the log can never show whether
+        real faces are landing at 0.75 or 0.95. Only the accepted list is
+        embedded and recognized; the rejected list costs nothing but a log line.
+
+        Args:
+            faces: iterable of YuNet detection rows, or None when the frame had
+                no detections at all.
+            threshold: minimum detection score to accept a face as real.
+
+        Returns:
+            ``(accepted, rejected)``, two lists of detection rows.
+        """
+        if faces is None:
+            return [], []
+
+        accepted = []
+        rejected = []
+        for face in faces:
+            if face[-1] >= threshold:
+                accepted.append(face)
+            else:
+                rejected.append(face)
+
+        return accepted, rejected
 
     @staticmethod
     def scale_detection(face, scale):
